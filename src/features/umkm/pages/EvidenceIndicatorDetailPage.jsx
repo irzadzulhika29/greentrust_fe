@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Ellipsis, Info, Plus, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Ellipsis, Info, Loader2, Plus, X } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import {
   categories,
@@ -7,35 +7,35 @@ import {
   getIndicatorHref,
 } from '@/features/umkm/data/evidenceVaultData'
 
+const N8N_URL = import.meta.env.VITE_N8N_URL
+const BASE_API = import.meta.env.VITE_BASE_API
+
 const statusClasses = {
   'on-chain': 'bg-[#dcebdc] text-[#4f8b5e]',
   review: 'bg-[#fbefd7] text-[#c9853e]',
 }
 
-const uploadQueue = [
-  {
-    type: 'PDF',
-    name: 'Tagihan PLN Februari.pdf',
-    meta: '380 KB • terklasifikasi: EE • conf 96%',
-    state: 'done',
-  },
-  {
-    type: 'JPG',
-    name: 'Foto IPAL workshop.jpg',
-    meta: '2.1 MB • OCR & ekstraksi konten...',
-    state: 'processing',
-    progress: 55,
-  },
-  {
-    type: 'PDF',
-    name: 'Kontrak BPJS karyawan.pdf',
-    meta: '1.4 MB • compute SHA-256...',
-    state: 'processing',
-    progress: 18,
-  },
-]
+const formatBytes = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const getFileExt = (name) => name.split('.').pop().toUpperCase().slice(0, 4)
+
+const ACCEPTED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+const MAX_BYTES = 10 * 1024 * 1024
 
 const UploadDocumentModal = ({ indicator, onClose }) => {
+  const fileInputRef = useRef(null)
+  const [files, setFiles] = useState([])
+  const [isDragging, setIsDragging] = useState(false)
+  const [submitState, setSubmitState] = useState('idle') // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState('')
+  const [categories, setCategories] = useState([])
+  const [selectedRequirementId, setSelectedRequirementId] = useState('')
+  const [loadingCategories, setLoadingCategories] = useState(true)
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -53,6 +53,110 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [onClose])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const res = await fetch(`${BASE_API}/evidence/categories`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!res.ok) {
+          throw new Error('Gagal memuat kategori evidence')
+        }
+
+        const json = await res.json()
+        setCategories(json.data || [])
+
+        // Auto-select first requirement if available
+        if (json.data && json.data.length > 0 && json.data[0].requirements?.length > 0) {
+          setSelectedRequirementId(json.data[0].requirements[0].requirement_id)
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+        setErrorMsg(err.message || 'Gagal memuat kategori evidence')
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  const addFiles = useCallback((incoming) => {
+    const valid = Array.from(incoming).filter((f) => {
+      if (!ACCEPTED_MIME.includes(f.type)) return false
+      if (f.size > MAX_BYTES) return false
+      return true
+    })
+    setFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.name + f.size))
+      return [...prev, ...valid.filter((f) => !existing.has(f.name + f.size))]
+    })
+  }, [])
+
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    addFiles(e.dataTransfer.files)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => setIsDragging(false)
+
+  const handleFileInput = (e) => {
+    addFiles(e.target.files)
+    e.target.value = ''
+  }
+
+  const handleSubmit = async () => {
+    if (files.length === 0) return
+    if (!selectedRequirementId) {
+      setErrorMsg('Pilih kategori evidence terlebih dahulu')
+      return
+    }
+
+    setSubmitState('loading')
+    setErrorMsg('')
+
+    try {
+      // Send each file as a separate request, all in parallel
+      const requests = files.map((file) => {
+        const formData = new FormData()
+        formData.append('document', file)
+        formData.append('requirement_id', selectedRequirementId)
+
+        return fetch(`${N8N_URL}/evidence-docs`, {
+          method: 'POST',
+          body: formData,
+        })
+      })
+
+      const results = await Promise.all(requests)
+      const failed = results.filter((r) => !r.ok)
+
+      if (failed.length > 0) {
+        throw new Error(`${failed.length} file gagal dikirim (status ${failed[0].status})`)
+      }
+
+      setSubmitState('success')
+    } catch (err) {
+      setSubmitState('error')
+      setErrorMsg(err.message ?? 'Terjadi kesalahan saat mengirim file.')
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1d1c19]/45 px-4 py-6">
@@ -86,9 +190,18 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
         </div>
 
         <div className="space-y-3 px-6 py-5">
+          {/* Drop zone */}
           <button
             type="button"
-            className="flex min-h-[158px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed border-[#d9e2da] bg-[#f8f5ef] px-5 text-center"
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`flex min-h-[158px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-5 text-center transition ${
+              isDragging
+                ? 'border-[#236041] bg-[#eef6f0]'
+                : 'border-[#d9e2da] bg-[#f8f5ef] hover:border-[#236041] hover:bg-[#f2f8f3]'
+            }`}
           >
             <div className="text-[2.2rem]" aria-hidden="true">
               📂
@@ -97,55 +210,130 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
               Tarik file ke sini, atau <span className="text-[#236041]">jelajah dari komputer</span>
             </div>
             <div className="mt-2 text-[0.82rem] font-semibold uppercase text-[#8d877f]">
-              PDF • JPG • PNG  maks 10 MB • 17/20 hari ini
+              PDF • JPG • PNG • maks 10 MB per file
             </div>
           </button>
 
-          <div className="space-y-3">
-            {uploadQueue.map((item) => (
-              <div
-                key={item.name}
-                className="rounded-[18px] border border-[#ddd6ca] bg-white px-4 py-3 shadow-[0_12px_24px_rgba(21,24,18,0.03)]"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-start gap-4">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#e7e1d8] bg-[#fbfaf7] text-[0.72rem] font-bold text-[#8a857d]">
-                      {item.type}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-[0.95rem] font-bold leading-tight text-[#20201c]">{item.name}</div>
-                      <div className="mt-0.5 text-[0.8rem] font-semibold text-[#8a857d]">{item.meta}</div>
-                    </div>
-                  </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            multiple
+            className="sr-only"
+            onChange={handleFileInput}
+            aria-label="Pilih file"
+          />
 
-                  {item.state === 'done' ? (
-                    <div className="rounded-full border border-[#c8dfca] bg-[#dcebdc] px-3 py-1.5 text-[0.82rem] font-bold text-[#4f8b5e]">
-                      ✓ selesai
-                    </div>
-                  ) : (
-                    <div className="text-[0.92rem] font-bold text-[#5f5a53]">{item.progress}%</div>
+          {/* Category & Requirement Selector */}
+          {loadingCategories ? (
+            <div className="flex items-center justify-center gap-2 rounded-[18px] border border-[#ddd6ca] bg-[#fbfaf7] px-4 py-4 text-[0.88rem] font-semibold text-[#8a857d]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Memuat kategori...
+            </div>
+          ) : categories.length > 0 ? (
+            <div className="space-y-2">
+              <label htmlFor="requirement-select" className="block text-[0.88rem] font-bold text-[#20201c]">
+                Pilih Kategori Evidence
+              </label>
+              <div className="relative">
+                <select
+                  id="requirement-select"
+                  value={selectedRequirementId}
+                  onChange={(e) => setSelectedRequirementId(e.target.value)}
+                  className="w-full appearance-none rounded-[16px] border border-[#ddd6ca] bg-white px-4 py-3 pr-10 text-[0.95rem] font-semibold text-[#20201c] transition hover:border-[#236041] focus:border-[#236041] focus:outline-none focus:ring-2 focus:ring-[#236041]/20"
+                >
+                  {categories.map((category) =>
+                    category.requirements?.map((req) => (
+                      <option key={req.requirement_id} value={req.requirement_id}>
+                        [{category.code}] {req.name}
+                      </option>
+                    ))
                   )}
-                </div>
-
-                {item.state === 'processing' ? (
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e6ece6]">
-                    <div
-                      className="h-full rounded-full bg-[#236041]"
-                      style={{ width: `${item.progress}%` }}
-                    />
-                  </div>
-                ) : null}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a857d]" />
               </div>
-            ))}
-          </div>
+              {selectedRequirementId && (
+                <div className="rounded-[14px] bg-[#eef6f0] px-3 py-2 text-[0.82rem] font-normal leading-5 text-[#2d6644]">
+                  {categories
+                    .flatMap((c) => c.requirements || [])
+                    .find((r) => r.requirement_id === selectedRequirementId)?.description}
+                </div>
+              )}
+            </div>
+          ) : null}
 
-          <div className="flex items-start gap-3 rounded-[16px] border border-[#cfe0f0] bg-[#eef6ff] px-4 py-3 text-[#4b5d6f]">
-            <Info className="mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-[0.88rem] font-normal leading-5">
-              Anda bisa menutup jendela ini — pemrosesan berjalan di latar belakang. Notifikasi muncul saat
-              semua file siap direview.
-            </p>
-          </div>
+          {/* File list */}
+          {files.length > 0 && (
+            <div className="space-y-2">
+              {files.map((file, index) => (
+                <div
+                  key={file.name + file.size}
+                  className="rounded-[18px] border border-[#ddd6ca] bg-white px-4 py-3 shadow-[0_12px_24px_rgba(21,24,18,0.03)]"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-4">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#e7e1d8] bg-[#fbfaf7] text-[0.72rem] font-bold text-[#8a857d]">
+                        {getFileExt(file.name)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[0.95rem] font-bold leading-tight text-[#20201c]">
+                          {file.name}
+                        </div>
+                        <div className="mt-0.5 text-[0.8rem] font-semibold text-[#8a857d]">
+                          {formatBytes(file.size)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {submitState === 'success' ? (
+                      <div className="rounded-full border border-[#c8dfca] bg-[#dcebdc] px-3 py-1.5 text-[0.82rem] font-bold text-[#4f8b5e]">
+                        ✓ terkirim
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        disabled={submitState === 'loading'}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#8a857d] transition hover:bg-[#f4f1ea] hover:text-[#20201c] disabled:opacity-40"
+                        aria-label={`Hapus ${file.name}`}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Error banner */}
+          {submitState === 'error' && (
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#f5cfc9] bg-[#fff4f2] px-4 py-3 text-[#8b3a2e]">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-[0.88rem] font-normal leading-5">{errorMsg}</p>
+            </div>
+          )}
+
+          {/* Success banner */}
+          {submitState === 'success' && (
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#c8dfca] bg-[#eef6f0] px-4 py-3 text-[#2d6644]">
+              <Check className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-[0.88rem] font-normal leading-5">
+                File berhasil dikirim ke pipeline AI. Pemrosesan berjalan di latar belakang.
+              </p>
+            </div>
+          )}
+
+          {/* Info banner — only when idle/error */}
+          {submitState !== 'success' && (
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#cfe0f0] bg-[#eef6ff] px-4 py-3 text-[#4b5d6f]">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-[0.88rem] font-normal leading-5">
+                Anda bisa menutup jendela ini — pemrosesan berjalan di latar belakang. Notifikasi
+                muncul saat semua file siap direview.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col-reverse justify-end gap-3 pt-1 sm:flex-row">
             <button
@@ -155,13 +343,36 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
             >
               Tutup
             </button>
-            <button
-              type="button"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#20201c] bg-[#20201c] px-7 text-[0.95rem] font-bold text-white transition hover:bg-[#11110f]"
-            >
-              Review Hasil
-              <ArrowRight className="h-4 w-4" />
-            </button>
+
+            {submitState === 'success' ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#236041] bg-[#236041] px-7 text-[0.95rem] font-bold text-white transition hover:bg-[#1a4d31]"
+              >
+                Selesai
+                <Check className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={files.length === 0 || submitState === 'loading'}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#20201c] bg-[#20201c] px-7 text-[0.95rem] font-bold text-white transition hover:bg-[#11110f] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {submitState === 'loading' ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    Kirim
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

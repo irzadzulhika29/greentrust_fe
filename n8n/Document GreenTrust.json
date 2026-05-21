@@ -9,10 +9,10 @@
       "type": "n8n-nodes-base.mistralAi",
       "typeVersion": 1,
       "position": [
-        1904,
-        704
+        5280,
+        3840
       ],
-      "id": "9181fe0d-1323-4a02-9d92-a3b003bbd0ea",
+      "id": "556508a3-0ff5-4f32-aaea-9f8dc15daa19",
       "name": "Extract text",
       "credentials": {
         "mistralCloudApi": {
@@ -35,10 +35,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        2000,
-        1024
+        5984,
+        5008
       ],
-      "id": "5b3275f7-221e-4c9a-b0d6-1b312c81e577",
+      "id": "90cb4a95-0e5f-49a0-b4ce-b98324772a50",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -54,10 +54,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2464,
-        704
+        5840,
+        3840
       ],
-      "id": "e80a3443-6108-4ab9-a69c-fbba7a4097ce",
+      "id": "1e0f8a38-50eb-4c81-af1b-3c3bdf1b7ccd",
       "name": "Normalize JSON Output"
     },
     {
@@ -69,10 +69,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2144,
-        704
+        5520,
+        3840
       ],
-      "id": "630cf254-006b-4032-8fb8-6701d5bfddc2",
+      "id": "5afc3f6b-f309-459a-bfa7-d8f00b00c20a",
       "name": "KTP Extractor"
     },
     {
@@ -84,10 +84,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2672,
-        704
+        6048,
+        3840
       ],
-      "id": "04421fdd-f0f5-4054-b0e8-b3fc5c08c46f",
+      "id": "e8421770-d381-442c-844b-8b2a4de1d59a",
       "name": "Respond to Webhook"
     },
     {
@@ -100,114 +100,426 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        1664,
-        704
+        5040,
+        3840
       ],
-      "id": "f6c8691a-6c9e-464f-abf0-e5ae3d9687fa",
+      "id": "8bf8e1a9-40e6-456d-bf9a-7dd9e2e50077",
       "name": "Extract KTP",
       "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "bahan-baku",
-        "responseMode": "responseNode",
+        "jsCode": "const source = $node[\"Scoring Docs Evidence\"].json ?? {};\nconst item = $input.first();\n\nconst parseJsonString = (value) => {\n  const cleaned = String(value)\n    .trim()\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n  return JSON.parse(cleaned);\n};\n\nlet raw = item.json?.text ?? item.json?.response ?? item.json?.output ?? item.json;\nif (typeof raw === 'string') {\n  raw = parseJsonString(raw);\n}\nif (!raw || typeof raw !== 'object') {\n  throw new Error('Basic LLM Chain1 tidak menghasilkan JSON scoring yang valid.');\n}\n\nconst aiConfidence = Number(Math.max(0, Math.min(1, Number.parseFloat(String(raw.ai_confidence ?? source.ai_confidence ?? 0))))).toFixed(3);\nconst requirementId = source.requirement_id;\nconst categoryId = source.category_id;\nconst fileName = source.file_name || 'document-uploaded-file';\n\nreturn [{\n  json: {\n    ...source,\n    ai_confidence: Number(aiConfidence),\n    ai_scoring_reason: String(raw.reason ?? '').trim(),\n    upload_request: {\n      method: 'POST',\n      path: `/evidence/categories/${categoryId}/documents`,\n      formData: {\n        requirement_id: requirementId,\n        ai_confidence: aiConfidence\n      },\n      binary_field: 'document'\n    },\n    curl_preview: `curl --location -g 'https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1/evidence/categories/${categoryId}/documents' \\\\\\n--header 'Authorization: Bearer REPLACE_WITH_USER_TOKEN' \\\\\\n--form 'requirement_id=\"${requirementId}\"' \\\\\\n--form 'document=@\"/${fileName}\"' \\\\\\n--form 'ai_confidence=\"${aiConfidence}\"'`\n  },\n  binary: $node[\"Scoring Docs Evidence\"].binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5936,
+        4576
+      ],
+      "id": "a2fae1a3-6a08-48fe-954d-612ca109dddd",
+      "name": "Build Evidence Upload Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
       "position": [
-        1584,
-        1216
+        6976,
+        4592
       ],
-      "id": "fb39776f-ea78-4510-9e40-44017cf297a8",
-      "name": "Bahan Baku & Sourcing",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "f59225d2-6c98-4abf-b447-3962c18ebeff",
+      "name": "Respond Evidence Webhook"
     },
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "limbah",
+        "path": "evidence-docs",
         "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        1584,
-        1456
+        4928,
+        4480
       ],
-      "id": "57791c90-4752-4457-b59c-90cf02bfa72b",
-      "name": "Pengelolaan Limbah",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "d8534f0a-761d-4202-9122-9896e706ef8d",
+      "name": "Evidence Vault",
+      "webhookId": "11617f8a-cd44-4f7d-a3d7-5d1a1a6259d1"
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "proses-produksi",
-        "responseMode": "responseNode",
-        "options": {}
+        "method": "GET",
+        "url": "https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1/evidence/categories",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_USER_TOKEN"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
       "position": [
-        1568,
-        1680
+        5136,
+        4320
       ],
-      "id": "57c057aa-01ce-42b6-8ece-c3a5d8f90424",
-      "name": "Proses Produksi",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "0b810f49-d9ef-48d3-bb88-7e3118b91956",
+      "name": "Get Evidence Categories"
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "sosial-ketenagakerjaan",
-        "responseMode": "responseNode",
-        "options": {}
+        "jsCode": "const webhook = $node[\"Evidence Vault\"];\nconst source = webhook.json ?? {};\nconst body = source.body ?? {};\nconst binarySource = webhook.binary ?? {};\nconst document = binarySource.document ?? Object.values(binarySource)[0];\nif (!document) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst requirementId = String(body.requirement_id ?? '').trim().toUpperCase();\nif (!requirementId) {\n  throw new Error('Form-data `requirement_id` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst categories = Array.isArray($json?.data) ? $json.data : [];\nconst category = categories.find((item) => Array.isArray(item.requirements) && item.requirements.some((req) => String(req.requirement_id ?? '').toUpperCase() === requirementId));\nif (!category) {\n  throw new Error(`requirement_id ${requirementId} tidak ditemukan pada evidence categories.`);\n}\n\nconst requirement = category.requirements.find((req) => String(req.requirement_id ?? '').toUpperCase() === requirementId);\n\nreturn [{\n  json: {\n    requirement_id: requirementId,\n    category_id: String(category.category_id ?? category.code ?? requirementId.split('-')[0]).toUpperCase(),\n    category_code: String(category.code ?? category.category_id ?? '').toUpperCase(),\n    category_name: category.name ?? '',\n    category_weight: Number(category.weight ?? 0),\n    requirement_name: requirement?.name ?? '',\n    requirement_description: requirement?.description ?? '',\n    requirement_sort_order: Number(requirement?.sort_order ?? 0),\n    provided_ai_confidence: String(body.ai_confidence ?? '').trim(),\n    file_name: document.fileName ?? '',\n    mime_type: document.mimeType ?? ''\n  },\n  binary: {\n    document\n  }\n}];"
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        1568,
-        1920
+        5344,
+        4320
       ],
-      "id": "3b1f40cb-ff96-4f42-ab3b-090204d9e4ca",
-      "name": "Sosial & Ketenagakerjaan",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "ad5b73db-510b-4c91-8967-1ba20cc8ed52",
+      "name": "Resolve Requirement Context"
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "energi-emisi",
-        "responseMode": "responseNode",
+        "binaryProperty": "document",
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
       "position": [
-        1568,
-        2160
+        5360,
+        4560
       ],
-      "id": "22d836f1-5173-4119-8231-ecd55b195c8e",
-      "name": "Energi & Emisi",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "24d4128a-3ce5-4460-9190-e57df87b1066",
+      "name": "Extract Evidence Document",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "VIEGfjgKxzgis66f",
+          "name": "Mistral Cloud account"
+        }
+      }
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "legalitas-kepatuhan",
-        "responseMode": "responseNode",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "4f0f8f94-9471-48a5-b6c4-e5e8cdbe4899",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "leftValue": "={{ ((($binary.document ?? Object.values($binary ?? {})[0] ?? {}).mimeType ?? '') + '').toLowerCase() }}",
+                    "rightValue": "image/"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "d4f7dd0a-2648-4dc3-9217-47d1a7c2d03e",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ ((($binary.document ?? Object.values($binary ?? {})[0] ?? {}).mimeType ?? '') + '') }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            }
+          ]
+        },
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
       "position": [
-        1600,
-        2416
+        5136,
+        4480
       ],
-      "id": "d6a98170-afe5-4cb0-b623-5061d13c7765",
-      "name": "Legalitas & Kepatuhan",
-      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+      "id": "7c0c4d60-0f2b-40a6-98d8-1f675441357f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $node[\"Resolve Requirement Context\"].json ?? {};\nconst document = $node[\"Resolve Requirement Context\"].binary?.document;\nif (!document) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst requirementId = String(source.requirement_id ?? '').trim().toUpperCase();\nconst prompt = [\n  `Anda menilai bukti kategori ${source.category_name || source.category_id || '-' } untuk GreenTrust Passport.`,\n  requirementId ? `Requirement target: ${requirementId} - ${source.requirement_name || ''}.` : 'Requirement target belum dikirim.',\n  source.requirement_description ? `Deskripsi requirement: ${source.requirement_description}` : '',\n  'Analisis gambar yang diunggah dan nilai seberapa kuat gambar ini mendukung requirement target.',\n  'Kembalikan JSON valid saja dengan schema berikut:',\n  '{\"image_summary\":\"\",\"visible_text\":[],\"visible_objects\":[],\"document_type_guess\":\"\",\"evidence_relevance\":\"\",\"ai_confidence\":0}',\n  'Aturan:',\n  '- image_summary: 1-3 kalimat ringkas terkait isi gambar.',\n  '- visible_text: array string teks yang benar-benar terlihat jika ada.',\n  '- visible_objects: array string objek utama yang relevan.',\n  '- document_type_guess: tebakan jenis dokumen/foto.',\n  '- evidence_relevance: alasan singkat keterkaitan gambar terhadap requirement.',\n  '- ai_confidence: angka 0 sampai 1, wajib 3 digit desimal. Contoh 0.873.',\n  '- Skor tinggi jika bukti visual sangat jelas dan relevan; skor rendah jika ambigu, blur, atau tidak mendukung requirement.',\n  '- Jangan kembalikan markdown atau teks di luar JSON.'\n].filter(Boolean).join('\\n');\n\nreturn [{\n  json: {\n    ...source,\n    file_name: source.file_name ?? document.fileName ?? '',\n    mime_type: source.mime_type ?? document.mimeType ?? '',\n    provided_requirement_id: requirementId,\n    provided_ai_confidence: String(source.provided_ai_confidence ?? '').trim(),\n    alibaba_request: {\n      model: 'qwen-vl-plus',\n      response_format: { type: 'json_object' },\n      messages: [\n        {\n          role: 'system',\n          content: 'You are a precise evidence analyst. Return valid JSON only.'\n        },\n        {\n          role: 'user',\n          content: [\n            {\n              type: 'text',\n              text: prompt\n            },\n            {\n              type: 'image_url',\n              image_url: {\n                url: `data:${document.mimeType};base64,${document.data}`\n              }\n            }\n          ]\n        }\n      ]\n    }\n  },\n  binary: {\n    document\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5296,
+        4288
+      ],
+      "id": "c2f1cdb2-f525-4a03-a996-26b2dbfad0a7",
+      "name": "Prepare Image Vision Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer sk-2e6190e1832b42359f5a9e213ae11ea0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.alibaba_request }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5504,
+        4288
+      ],
+      "id": "c47510d8-f873-4d1b-8fa0-3a0e1e040808",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $node[\"Prepare Image Vision Request\"].json ?? {};\nconst document = $node[\"Prepare Image Vision Request\"].binary?.document;\nif (!document) {\n  throw new Error('Binary document hilang sebelum proses scoring image evidence.');\n}\n\nconst rawContent = $json?.choices?.[0]?.message?.content ?? $json?.output_text ?? $json?.content ?? $json;\nconst parseJsonString = (value) => {\n  const cleaned = String(value)\n    .trim()\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n  return JSON.parse(cleaned);\n};\n\nlet vision = rawContent;\nif (typeof vision === 'string') {\n  vision = parseJsonString(vision);\n}\nif (!vision || typeof vision !== 'object') {\n  throw new Error('Alibaba vision tidak mengembalikan object JSON yang valid.');\n}\n\nconst visibleText = Array.isArray(vision.visible_text) ? vision.visible_text : [];\nconst aiSummary = String(vision.image_summary ?? '').trim();\nconst evidenceRelevance = String(vision.evidence_relevance ?? '').trim();\nconst providedRequirementId = String(source.provided_requirement_id ?? '').trim().toUpperCase();\nconst categoryId = providedRequirementId.split('-')[0] || 'BB';\n\nlet aiConfidence = Number.parseFloat(String(vision.ai_confidence ?? ''));\nif (!Number.isFinite(aiConfidence)) {\n  aiConfidence = 0;\n}\naiConfidence = Math.max(0, Math.min(1, aiConfidence));\naiConfidence = Number(aiConfidence.toFixed(3));\n\nconst confidenceBand = aiConfidence >= 0.8 ? 'high' : aiConfidence >= 0.6 ? 'medium' : 'low';\n\nreturn [{\n  json: {\n    category_id: categoryId,\n    category_name: 'Bahan Baku & Sourcing',\n    category_weight: 20,\n    source_type: 'image_vision',\n    provided_requirement_id: providedRequirementId || '',\n    requirement_id: providedRequirementId || '',\n    ai_confidence: aiConfidence,\n    confidence_band: confidenceBand,\n    ai_summary: aiSummary || evidenceRelevance || 'Analisis gambar berhasil dibuat.',\n    ocr_excerpt: visibleText.slice(0, 8).join(' | ').slice(0, 500),\n    file_name: source.file_name ?? '',\n    mime_type: source.mime_type ?? '',\n    vision_analysis: vision\n  },\n  binary: {\n    document\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5728,
+        4288
+      ],
+      "id": "35c68aa1-5870-46f4-a157-b97090061841",
+      "name": "Scoring Image Evidence"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $node[\"Evidence Vault\"];\nconst source = webhook.json ?? {};\nconst body = source.body ?? {};\nconst binarySource = webhook.binary ?? {};\nconst document = binarySource.document ?? Object.values(binarySource)[0];\nif (!document) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Bahan Baku & Sourcing.');\n}\n\nconst requirements = [\n  {\n    id: 'BB-001',\n    name: 'Nota / invoice pembelian bahan baku',\n    description: 'Dokumen bukti pembelian bahan baku dari supplier, dapat berupa nota, invoice, atau bukti transaksi pembelian.',\n    keywords: ['nota', 'invoice', 'faktur', 'pembelian', 'supplier', 'qty', 'jumlah', 'harga', 'total', 'transaksi'],\n    preferImage: false,\n    preferText: true\n  },\n  {\n    id: 'BB-002',\n    name: 'Surat jalan dari supplier',\n    description: 'Dokumen pengiriman dari supplier yang membuktikan asal dan alur distribusi bahan baku.',\n    keywords: ['surat jalan', 'delivery order', 'pengiriman', 'supplier', 'diterima', 'tujuan', 'tanggal kirim', 'alamat kirim'],\n    preferImage: false,\n    preferText: true\n  },\n  {\n    id: 'BB-003',\n    name: 'Foto atau profil supplier',\n    description: 'Dokumentasi visual atau profil singkat supplier untuk memperkuat bukti sumber bahan baku.',\n    keywords: ['supplier', 'pemasok', 'profil', 'profile', 'toko', 'alamat', 'kontak', 'foto'],\n    preferImage: true,\n    preferText: false\n  }\n];\n\nconst pages = Array.isArray($json.pages) ? $json.pages : [];\nconst ocrText = pages.map((page) => page.markdown ?? page.text ?? '').join('\\n\\n').trim();\nconst normalizedText = `${String(document.fileName ?? '')}\\n${ocrText}`.toLowerCase();\nconst mimeType = String(document.mimeType ?? '').toLowerCase();\nconst providedRequirementId = String(body.requirement_id ?? '').trim().toUpperCase();\nconst providedConfidence = Number.parseFloat(String(body.ai_confidence ?? '').trim());\nconst categoryId = providedRequirementId.split('-')[0] || 'BB';\n\nconst evaluate = (requirement) => {\n  const matches = requirement.keywords.filter((keyword) => normalizedText.includes(keyword));\n  let score = 0.2 + matches.length * 0.1;\n\n  if (requirement.preferImage && mimeType.startsWith('image/')) score += 0.08;\n  if (requirement.preferText && ocrText.length >= 40) score += 0.08;\n  if (ocrText.length >= 120) score += 0.04;\n  if (!ocrText && requirement.preferImage && mimeType.startsWith('image/')) score += 0.06;\n\n  return {\n    ...requirement,\n    matches,\n    score: Math.max(0.05, Math.min(0.98, Number(score.toFixed(2))))\n  };\n};\n\nconst ranked = requirements.map(evaluate).sort((left, right) => right.score - left.score);\nconst bestMatch = ranked[0];\nconst selectedMatch = providedRequirementId\n  ? ranked.find((item) => item.id === providedRequirementId)\n  : bestMatch;\n\nif (!selectedMatch) {\n  throw new Error(`requirement_id ${providedRequirementId} tidak valid untuk kategori ${categoryId}.`);\n}\n\nlet aiConfidence = selectedMatch.score;\nif (Number.isFinite(providedConfidence) && providedConfidence >= 0 && providedConfidence <= 1) {\n  aiConfidence = Number(providedConfidence.toFixed(2));\n} else if (providedRequirementId && bestMatch.id !== providedRequirementId && bestMatch.score - selectedMatch.score >= 0.12) {\n  aiConfidence = Math.max(0.2, Number((selectedMatch.score - 0.15).toFixed(2)));\n}\n\nconst confidenceBand = aiConfidence >= 0.8 ? 'high' : aiConfidence >= 0.6 ? 'medium' : 'low';\nconst summarySignals = selectedMatch.matches.length > 0 ? selectedMatch.matches.slice(0, 5).join(', ') : 'indikasi teks/visual masih minim';\n\nreturn [{\n  json: {\n    category_id: categoryId,\n    category_name: 'Bahan Baku & Sourcing',\n    category_weight: 20,\n    source_type: 'ocr_document',\n    provided_requirement_id: providedRequirementId || '',\n    requirement_id: selectedMatch.id,\n    requirement_name: selectedMatch.name,\n    requirement_description: selectedMatch.description,\n    suggested_requirement_id: bestMatch.id,\n    suggested_requirement_name: bestMatch.name,\n    ai_confidence: Number(aiConfidence.toFixed(2)),\n    confidence_band: confidenceBand,\n    ai_summary: `Dokumen paling dekat dengan ${selectedMatch.id} (${selectedMatch.name}). Sinyal utama: ${summarySignals}.`,\n    ocr_excerpt: ocrText.slice(0, 500),\n    file_name: document.fileName ?? '',\n    mime_type: document.mimeType ?? '',\n    scoring: {\n      best_match: {\n        requirement_id: bestMatch.id,\n        score: bestMatch.score,\n        matches: bestMatch.matches\n      },\n      selected_match: {\n        requirement_id: selectedMatch.id,\n        score: Number(aiConfidence.toFixed(2)),\n        matches: selectedMatch.matches\n      },\n      candidates: ranked.map((item) => ({\n        requirement_id: item.id,\n        score: item.score,\n        matches: item.matches\n      }))\n    }\n  },\n  binary: {\n    document\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5600,
+        4576
+      ],
+      "id": "1ca7924d-4a86-47c1-8719-9aaddf60889b",
+      "name": "Scoring Docs Evidence"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $node[\"Scoring Image Evidence\"].json ?? {};\nconst item = $input.first();\n\nconst parseJsonString = (value) => {\n  const cleaned = String(value)\n    .trim()\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n  return JSON.parse(cleaned);\n};\n\nlet raw = item.json?.text ?? item.json?.response ?? item.json?.output ?? item.json;\nif (typeof raw === 'string') {\n  raw = parseJsonString(raw);\n}\nif (!raw || typeof raw !== 'object') {\n  throw new Error('Basic LLM Chain tidak menghasilkan JSON scoring yang valid.');\n}\n\nconst aiConfidence = Number(Math.max(0, Math.min(1, Number.parseFloat(String(raw.ai_confidence ?? source.ai_confidence ?? 0))))).toFixed(3);\nconst requirementId = source.requirement_id;\nconst categoryId = source.category_id;\nconst fileName = source.file_name || 'document-uploaded-file';\n\nreturn [{\n  json: {\n    ...source,\n    ai_confidence: Number(aiConfidence),\n    ai_scoring_reason: String(raw.reason ?? '').trim(),\n    upload_request: {\n      method: 'POST',\n      path: `/evidence/categories/${categoryId}/documents`,\n      formData: {\n        requirement_id: requirementId,\n        ai_confidence: aiConfidence\n      },\n      binary_field: 'document'\n    },\n    curl_preview: `curl --location -g 'https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1/evidence/categories/${categoryId}/documents' \\\\\\n--header 'Authorization: Bearer REPLACE_WITH_USER_TOKEN' \\\\\\n--form 'requirement_id=\"${requirementId}\"' \\\\\\n--form 'document=@\"/${fileName}\"' \\\\\\n--form 'ai_confidence=\"${aiConfidence}\"'`\n  },\n  binary: $node[\"Scoring Image Evidence\"].binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6016,
+        4288
+      ],
+      "id": "c3ad8ffe-0d54-4b89-9a10-7144125904fb",
+      "name": "Build Evidence Upload Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1{{$json.upload_request.path}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_USER_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requirement_id",
+              "value": "={{ $json.upload_request.formData.requirement_id }}"
+            },
+            {
+              "name": "ai_confidence",
+              "value": "={{ $json.upload_request.formData.ai_confidence }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "document",
+              "inputDataFieldName": "document"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6608,
+        4288
+      ],
+      "id": "9f90b634-db54-4e66-b57b-3064762e9100",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1{{$json.upload_request.path}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_USER_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requirement_id",
+              "value": "={{ $json.upload_request.formData.requirement_id }}"
+            },
+            {
+              "name": "ai_confidence",
+              "value": "={{ $json.upload_request.formData.ai_confidence }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "document",
+              "inputDataFieldName": "document"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6560,
+        4592
+      ],
+      "id": "0bd73644-7c2d-4394-b7c1-be8b30901eaf",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        6912,
+        4288
+      ],
+      "id": "cf8e368c-86e5-4667-b402-de165a7e0297",
+      "name": "Respond Evidence Webhook1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Anda menilai confidence bukti image untuk GreenTrust Passport.\n\nRequirement target: {{ $json.requirement_id }}\nCategory: {{ $json.category_id }}\nRingkasan analisis image: {{ $json.ai_summary }}\nTeks terlihat: {{ $json.ocr_excerpt }}\nAnalisis vision: {{ JSON.stringify($json.vision_analysis) }}\n\nTugas:\n- Nilai seberapa kuat bukti ini mendukung requirement target.\n- Kembalikan HANYA object JSON valid.\n- Schema: {\"ai_confidence\":0.000,\"reason\":\"\"}\n- ai_confidence harus angka 0 sampai 1 dengan 3 digit desimal.\n- reason maksimal 1 kalimat singkat.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        6272,
+        4304
+      ],
+      "id": "e0dc34a1-4351-4029-9dc5-4c8bd6e74a77",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Anda menilai confidence bukti dokumen untuk GreenTrust Passport.\n\nRequirement target: {{ $json.requirement_id }}\nRequirement name: {{ $json.requirement_name }}\nCategory: {{ $json.category_id }}\nRingkasan heuristik: {{ $json.ai_summary }}\nOCR excerpt: {{ $json.ocr_excerpt }}\nScoring candidates: {{ JSON.stringify($json.scoring) }}\n\nTugas:\n- Nilai seberapa kuat dokumen ini mendukung requirement target.\n- Kembalikan HANYA object JSON valid.\n- Schema: {\"ai_confidence\":0.000,\"reason\":\"\"}\n- ai_confidence harus angka 0 sampai 1 dengan 3 digit desimal.\n- reason maksimal 1 kalimat singkat.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        6144,
+        4576
+      ],
+      "id": "1aa7bb3b-ba11-440a-af0f-95ecc875e5d8",
+      "name": "Basic LLM Chain1"
     }
   ],
   "pinData": {},
@@ -228,6 +540,16 @@
         [
           {
             "node": "KTP Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -266,14 +588,164 @@
           }
         ]
       ]
+    },
+    "Build Evidence Upload Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evidence Vault": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Evidence Document": {
+      "main": [
+        [
+          {
+            "node": "Scoring Docs Evidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Prepare Image Vision Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Evidence Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Image Vision Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Scoring Image Evidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring Docs Evidence": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring Image Evidence": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Evidence Upload Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Respond Evidence Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Respond Evidence Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Build Evidence Upload Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Build Evidence Upload Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "e0092bcd-bb7a-4cde-868d-933990ce7858",
+  "versionId": "8df3f4fa-c5e8-4565-8a44-27608a3525dd",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e901acb807f6f1eb84add1628862abce2439962dc055c79b585eb9f923890bb7"
