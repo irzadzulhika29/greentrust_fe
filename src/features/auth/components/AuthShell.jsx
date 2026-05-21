@@ -5,6 +5,7 @@ const AuthShell = ({
   rightCard,
   rightFooter,
   rightCardWrapperClassName = 'justify-end pr-6 xl:pr-12',
+  rightCardAbsoluteClassName,
 }) => {
   return (
     <div className="h-screen overflow-hidden bg-[#f6f2ea] text-[#1e241e]">
@@ -26,19 +27,27 @@ const AuthShell = ({
                   {rightEyebrow}
                 </div>
               ) : null}
-              <h2 className={`${rightEyebrow ? 'mt-4' : ''} max-w-[14ch] text-[3.2rem] leading-[0.98] tracking-[-0.05em] text-[#f6f2ea] xl:text-[4rem]`}>
+              <h2 className={`${rightEyebrow ? 'mt-4' : ''} max-w-full pr-6 text-[2.65rem] leading-[1.02] tracking-[-0.045em] text-[#f6f2ea] xl:text-[3.2rem]`}>
                 {rightTitle}
               </h2>
             </div>
 
-            <div className={`flex ${rightCardWrapperClassName}`}>
-              {rightCard}
-            </div>
+            {rightCardAbsoluteClassName ? null : (
+              <div className={`flex ${rightCardWrapperClassName}`}>
+                {rightCard}
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-[0.78rem] font-semibold uppercase tracking-[0.28em] text-[#c6d8c4]">
               {rightFooter}
             </div>
           </div>
+
+          {rightCardAbsoluteClassName ? (
+            <div className={`absolute z-10 ${rightCardAbsoluteClassName}`}>
+              {rightCard}
+            </div>
+          ) : null}
         </section>
       </div>
     </div>

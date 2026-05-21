@@ -16,88 +16,16 @@ const investorSteps = [
 
 const InvestorRegisterPage = () => {
   const navigate = useNavigate()
-  const [showOtp, setShowOtp] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
-  const [otpError, setOtpError] = useState(null)
-  const [otpVerifying, setOtpVerifying] = useState(false)
   const [formData, setFormData] = useState({ email: '', password: '', confirm_password: '' })
 
   const handleFormChange = (field, value) => {
     setFormData((cur) => ({ ...cur, [field]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setError(null)
-
-    if (formData.password !== formData.confirm_password) {
-      setError('Password dan konfirmasi password tidak sama.')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      // Backend role contract is not visible in this repo yet, so frontend investor intent stays route-driven for now.
-      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirm_password,
-        }),
-      })
-
-      const json = await res.json()
-
-      if (!res.ok) {
-        throw new Error(json?.message ?? `Error ${res.status}`)
-      }
-
-      if (json?.data?.session_token) {
-        sessionStorage.setItem('session_token', json.data.session_token)
-      }
-
-      setShowOtp(true)
-    } catch (err) {
-      setError(err.message ?? 'Pendaftaran gagal. Coba lagi.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleOtpComplete = async (code) => {
-    setOtpError(null)
-    setOtpVerifying(true)
-    const token = sessionStorage.getItem('session_token')
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/verify-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-Token': token ?? '',
-        },
-        body: JSON.stringify({ code }),
-      })
-
-      const json = await res.json()
-
-      if (!res.ok) {
-        throw new Error(json?.message ?? `Error ${res.status}`)
-      }
-
-      if (json?.data?.session_token) {
-        sessionStorage.setItem('session_token', json.data.session_token)
-      }
-
-      navigate('/investor')
-    } catch (err) {
-      setOtpError(err.message ?? 'Kode OTP salah. Coba lagi.')
-    } finally {
-      setOtpVerifying(false)
-    }
+    // Temporary slicing bypass: jump straight into onboarding so step flow/UI can be reviewed.
+    navigate('/investor/onboarding')
   }
 
   const leftPanel = (
@@ -125,17 +53,17 @@ const InvestorRegisterPage = () => {
 
         <RegisterForm
           confirmPassword={formData.confirm_password}
+          disableValidation
           email={formData.email}
-          error={error}
+          error={null}
           onFieldChange={handleFormChange}
-          onOtpComplete={handleOtpComplete}
           onSubmit={handleSubmit}
-          otpError={otpError}
-          otpVerifying={otpVerifying}
+          otpError={null}
+          otpVerifying={false}
           password={formData.password}
-          showOtp={showOtp}
+          showOtp={false}
           submitLabel="Buat Akun Investor"
-          submitting={submitting}
+          submitting={false}
         />
 
         <div className="mt-4 text-center text-[0.82rem] text-[#656058]">
@@ -159,8 +87,8 @@ const InvestorRegisterPage = () => {
           Setelah daftar, Anda akan melalui <span className="font-normal italic text-[#A1D0AA]">5 langkah</span> singkat.
         </>
       }
-      rightCard={<StepListPreview steps={investorSteps} />}
-      rightCardWrapperClassName="justify-start pl-2 pt-10 xl:pl-1"
+      rightCard={<StepListPreview compact steps={investorSteps} />}
+      rightCardAbsoluteClassName="bottom-10 left-14 right-14 xl:left-16 xl:right-16"
       rightFooter={null}
     />
   )
