@@ -5,6 +5,8 @@ import AppLayout from '@/components/shared/AppLayout'
 import LoginPage    from '@/features/auth/pages/LoginPage'
 import OnboardingPage from '@/features/auth/pages/OnboardingPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
+import InvestorLoginPage from '@/features/auth/pages/InvestorLoginPage'
+import InvestorRegisterPage from '@/features/auth/pages/InvestorRegisterPage'
 
 // Public
 import LandingPage  from '@/features/public/pages/LandingPage'
@@ -56,8 +58,10 @@ const AppRouter = () => {
         <Route path="/direktori" element={<UmkmDirectoryPage />} />
         <Route path="/passport/:slug" element={<PassportDetailPage />} />
         <Route path="/login"    element={<LoginPage />} />
+        <Route path="/investor/login" element={<InvestorLoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/investor/register" element={<InvestorRegisterPage />} />
 
         {/* UMKM — with sidebar */}
         <Route path="/umkm" element={<AppLayout><UmkmDashboard /></AppLayout>} />

@@ -1,46 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { useState } from 'react'
 import AuthBrand from '@/features/auth/components/AuthBrand'
 import AuthModeSwitch from '@/features/auth/components/AuthModeSwitch'
 import { StepListPreview } from '@/features/auth/components/AuthPreviewCards'
 import AuthShell from '@/features/auth/components/AuthShell'
 import RegisterForm from '@/features/auth/components/RegisterForm'
-import { useState } from 'react'
 
-const onboardingSteps = [
-  {
-    number: '01',
-    title: 'Verifikasi email',
-    desc: 'Klik tautan dari kotak masuk Anda',
-    tone: 'active',
-  },
-  {
-    number: '02',
-    title: 'Unggah KTP (OCR otomatis)',
-    desc: 'Data identitas terisi dari foto KTP',
-    tone: 'current',
-  },
-  {
-    number: '03',
-    title: 'Lengkapi profil bisnis',
-    desc: 'Nama usaha, lokasi, nomor WA bisnis',
-    tone: 'future',
-  },
-  {
-    number: '04',
-    title: 'Unggah dokumen di Evidence Vault',
-    desc: '6 kategori indikator keberlanjutan',
-    tone: 'future',
-  },
-  {
-    number: '05',
-    title: 'GRS ≥ 70 → terbitkan Passport',
-    desc: 'Hash terdaftar di blockchain testnet',
-    tone: 'future',
-  },
+const investorSteps = [
+  { number: '01', title: 'Verifikasi email', desc: 'Aktivasi akses investor dari kotak masuk Anda', tone: 'active' },
+  { number: '02', title: 'Masuk ke direktori UMKM', desc: 'Mulai eksplorasi Green Passport yang tersedia', tone: 'current' },
+  { number: '03', title: 'Buka breakdown dokumen', desc: 'Lihat indikator dan dokumen yang boleh diakses', tone: 'future' },
+  { number: '04', title: 'Filter berdasarkan GRS', desc: 'Saring UMKM menurut tier dan fokus sektor', tone: 'future' },
 ]
 
-const RegisterPage = () => {
+const InvestorRegisterPage = () => {
   const navigate = useNavigate()
   const [showOtp, setShowOtp] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -64,6 +38,7 @@ const RegisterPage = () => {
 
     setSubmitting(true)
     try {
+      // Backend role contract is not visible in this repo yet, so frontend investor intent stays route-driven for now.
       const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,7 +92,7 @@ const RegisterPage = () => {
         sessionStorage.setItem('session_token', json.data.session_token)
       }
 
-      navigate('/onboarding')
+      navigate('/investor')
     } catch (err) {
       setOtpError(err.message ?? 'Kode OTP salah. Coba lagi.')
     } finally {
@@ -134,16 +109,16 @@ const RegisterPage = () => {
       <div className="relative z-10 mx-auto flex w-full max-w-[500px] flex-1 flex-col justify-center py-2 lg:mx-0">
         <div className="text-[0.75rem] font-semibold text-[#5b8c52]">Daftar gratis</div>
         <h1 className="mt-3 text-[2rem] leading-[1.03] tracking-[-0.04em] italic text-[#171717] sm:text-[2.45rem]">
-          Mulai bukti hijau Anda hari ini.
+          Buat akun investor Anda.
         </h1>
         <p className="mt-4 max-w-[31rem] text-[0.93rem] leading-6.5 text-[#5f5b55]">
-          Pilih peran. Pendaftaran selesai dalam &lt;60 detik, tanpa biaya, tanpa sertifikasi formal.
+          Pilih jalur investor untuk langsung masuk ke area eksplorasi Green Passport tanpa onboarding UMKM.
         </p>
 
         <AuthModeSwitch
           items={[
-            { label: 'Pelaku UMKM', description: 'punya bisnis hijau', to: '/register', active: true },
-            { label: 'Investor / Buyer', description: 'cari UMKM hijau', to: '/investor/register', active: false },
+            { label: 'Pelaku UMKM', description: 'punya bisnis hijau', to: '/register', active: false },
+            { label: 'Investor / Buyer', description: 'cari UMKM hijau', to: '/investor/register', active: true },
           ]}
           variant="detailed"
         />
@@ -159,7 +134,7 @@ const RegisterPage = () => {
           otpVerifying={otpVerifying}
           password={formData.password}
           showOtp={showOtp}
-          submitLabel="Buat Akun & Kirim Verifikasi"
+          submitLabel="Buat Akun Investor"
           submitting={submitting}
         />
 
@@ -167,7 +142,7 @@ const RegisterPage = () => {
           Sudah punya akun?{' '}
           <Link
             className="inline-flex items-center gap-1 font-semibold text-[#2d6d46] transition-colors duration-200 hover:text-[#1d4f32]"
-            to="/login"
+            to="/investor/login"
           >
             Masuk <ArrowRight className="h-3 w-3" />
           </Link>
@@ -184,11 +159,11 @@ const RegisterPage = () => {
           Setelah daftar, Anda akan melalui <span className="font-normal italic text-[#A1D0AA]">5 langkah</span> singkat.
         </>
       }
-      rightCard={<StepListPreview steps={onboardingSteps} />}
+      rightCard={<StepListPreview steps={investorSteps} />}
       rightCardWrapperClassName="justify-start pl-2 pt-10 xl:pl-1"
       rightFooter={null}
     />
   )
 }
 
-export default RegisterPage
+export default InvestorRegisterPage
