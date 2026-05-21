@@ -6,7 +6,13 @@ import PressButton from '@/components/ui/PressButton'
 // Pages that have a hero section — navbar starts transparent on these
 // Value is the hero height as a fraction of viewport height
 // Prefix entries (ending with *) match any path starting with that prefix
-const HERO_PAGES = { '/': 0.8, '/direktori': 0.5, '/passport/': 0.5 }
+const HERO_PAGES = {
+  '/': 0.8,
+  '/direktori': 0.5,
+  '/investor': 0.5,
+  '/investor/': 0.5,
+  '/passport/': 0.5,
+}
 
 const getHeroFraction = (pathname) => {
   // exact match first

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Search, ChevronDown, RotateCcw, Check } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Navbar } from '@/components/ui/navbar'
 import Iridescence from '@/components/ui/Iridescence'
 import {
@@ -107,7 +108,7 @@ const InvestorDirectoryPage = () => {
           />
         </div>
 
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 pb-12 pt-0 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="mt-3 max-w-4xl text-[3.6rem] leading-none tracking-[-0.08em] text-white">
@@ -222,11 +223,12 @@ const InvestorDirectoryPage = () => {
                 Tidak ada investor yang cocok dengan filter ini.
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 {filtered.map((investor) => (
-                  <article
+                  <Link
                     key={investor.id}
-                    className="overflow-hidden rounded-2xl border border-[#e5e4e0] bg-white shadow-[0_10px_24px_rgba(17,17,17,0.04)]"
+                    to={`/investor/${investor.slug}`}
+                    className="block overflow-hidden rounded-2xl border border-[#e5e4e0] bg-white shadow-[0_10px_24px_rgba(17,17,17,0.04)] transition-shadow duration-200 hover:shadow-[0_16px_32px_rgba(17,17,17,0.08)]"
                   >
                     <div
                       className="flex items-center justify-between px-4 py-3 text-white"
@@ -294,7 +296,7 @@ const InvestorDirectoryPage = () => {
                         </div>
                       </div>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             )}

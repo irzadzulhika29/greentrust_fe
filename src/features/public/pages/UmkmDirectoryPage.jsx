@@ -112,7 +112,7 @@ const UmkmDirectoryPage = () => {
         <div className="relative z-10 flex h-full flex-col justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
-              <h1 className="mt-20 text-4xl lg:text-5xl font-semibold leading-tight tracking-tight text-white mb-3">
+              <h1 className="text-4xl lg:text-5xl font-semibold leading-tight tracking-tight text-white mb-3">
                 Jelajah UMKM hijau terverifikasi.
               </h1>
               <p className="text-sm text-white/70 max-w-md leading-relaxed">
