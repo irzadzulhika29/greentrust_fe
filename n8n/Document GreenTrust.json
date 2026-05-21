@@ -9,10 +9,10 @@
       "type": "n8n-nodes-base.mistralAi",
       "typeVersion": 1,
       "position": [
-        48,
-        176
+        1904,
+        704
       ],
-      "id": "e9ff2cef-820a-487c-aeed-18729f218c42",
+      "id": "9181fe0d-1323-4a02-9d92-a3b003bbd0ea",
       "name": "Extract text",
       "credentials": {
         "mistralCloudApi": {
@@ -35,10 +35,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        144,
-        496
+        2000,
+        1024
       ],
-      "id": "5c2a9c4a-a715-4150-83ed-383b029b7231",
+      "id": "5b3275f7-221e-4c9a-b0d6-1b312c81e577",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -49,45 +49,46 @@
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"provinsi\": \"DKI JAKARTA\",\n  \"kota_kabupaten\": \"JAKARTA BARAT\",\n  \"nik\": \"3173062901050004\",\n  \"nama\": \"MUHAMMAD IRZA DZULHIKA\",\n  \"tempat_lahir\": \"JAKARTA\",\n  \"tanggal_lahir\": \"29-01-2005\",\n  \"jenis_kelamin\": \"LAKI-LAKI\",\n  \"golongan_darah\": \"-\",\n  \"alamat\": {\n    \"jalan\": \"JL PERMATA\",\n    \"rt\": \"007\",\n    \"rw\": \"015\",\n    \"kel_desa\": \"TEGAL ALUR\",\n    \"kecamatan\": \"KALIDERES\"\n  },\n  \"agama\": \"ISLAM\",\n  \"status_perkawinan\": \"BELUM KAWIN\",\n  \"pekerjaan\": \"PELAJAR/MAHASISWA\",\n  \"kewarganegaraan\": \"WNI\",\n  \"berlaku_hingga\": \"SEUMUR HIDUP\",\n  \"tanggal_terbit\": \"04-03-2022\",\n  \"tempat_terbit\": \"JAKARTA BARAT\"\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        448,
-        400
-      ],
-      "id": "34d53147-30bd-4653-84bd-a99f82508d0e",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
         "jsCode": "const parseJsonString = (value) => {\n  const cleaned = value\n    .trim()\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n\n  return JSON.parse(cleaned);\n};\n\nlet raw = $json.output ?? $json.text ?? $json.response ?? $json;\n\nif (typeof raw === 'string') {\n  raw = parseJsonString(raw);\n}\n\nif (raw && typeof raw === 'object' && raw.output && typeof raw.output === 'object') {\n  raw = raw.output;\n}\n\nif (typeof raw === 'string') {\n  raw = parseJsonString(raw);\n}\n\nif (raw && typeof raw === 'object') {\n  return [{ json: raw }];\n}\n\nthrow new Error('Workflow tidak menghasilkan object JSON yang valid.');"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        608,
-        176
+        2464,
+        704
       ],
-      "id": "12ede451-b16d-4a9c-843e-a0db8bab1747",
+      "id": "e80a3443-6108-4ab9-a69c-fbba7a4097ce",
       "name": "Normalize JSON Output"
     },
     {
       "parameters": {
         "promptType": "define",
         "text": "=Ekstrak data KTP dari teks OCR berikut.\n\nKembalikan HANYA satu object JSON valid, tanpa markdown, tanpa code fence ```json, tanpa kata pengantar, dan tanpa membungkus hasil dalam key seperti `output`, `data`, atau `result`.\n\nGunakan struktur persis berikut:\n{\n  \"provinsi\": \"\",\n  \"kota_kabupaten\": \"\",\n  \"nik\": \"\",\n  \"nama\": \"\",\n  \"tempat_lahir\": \"\",\n  \"tanggal_lahir\": \"\",\n  \"jenis_kelamin\": \"\",\n  \"golongan_darah\": \"\",\n  \"alamat\": {\n    \"jalan\": \"\",\n    \"rt\": \"\",\n    \"rw\": \"\",\n    \"kel_desa\": \"\",\n    \"kecamatan\": \"\"\n  },\n  \"agama\": \"\",\n  \"status_perkawinan\": \"\",\n  \"pekerjaan\": \"\",\n  \"kewarganegaraan\": \"\",\n  \"berlaku_hingga\": \"\",\n  \"tanggal_terbit\": \"\",\n  \"tempat_terbit\": \"\"\n}\n\nAturan:\n- Gunakan hanya data yang benar-benar ada di OCR.\n- Pertahankan format string apa adanya, termasuk NIK, tanggal, RT/RW.\n- Pisahkan `tempat_lahir` dan `tanggal_lahir` dari `Tempat/Tgl Lahir`.\n- Pisahkan `rt` dan `rw` dari `RT/RW`.\n- Jika nilai tidak ditemukan, isi dengan string kosong.\n\nOCR KTP:\n{{ $json.pages[0].markdown }}",
-        "hasOutputParser": false,
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        304,
-        176
+        2144,
+        704
       ],
-      "id": "22518e79-c9b2-4cba-b739-a23a58f6d2de",
+      "id": "630cf254-006b-4032-8fb8-6701d5bfddc2",
       "name": "KTP Extractor"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2672,
+        704
+      ],
+      "id": "04421fdd-f0f5-4054-b0e8-b3fc5c08c46f",
+      "name": "Respond to Webhook"
     },
     {
       "parameters": {
@@ -99,27 +100,114 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -192,
-        176
+        1664,
+        704
       ],
-      "id": "af6cc312-b5f4-45a5-8183-cb4d66b098ec",
-      "name": "Webhook",
+      "id": "f6c8691a-6c9e-464f-abf0-e5ae3d9687fa",
+      "name": "Extract KTP",
       "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
+        "httpMethod": "POST",
+        "path": "bahan-baku",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
-        816,
-        176
+        1584,
+        1216
       ],
-      "id": "0c95244d-cf1c-4279-b76e-4905808cc55c",
-      "name": "Respond to Webhook"
+      "id": "fb39776f-ea78-4510-9e40-44017cf297a8",
+      "name": "Bahan Baku & Sourcing",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "limbah",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1584,
+        1456
+      ],
+      "id": "57791c90-4752-4457-b59c-90cf02bfa72b",
+      "name": "Pengelolaan Limbah",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "proses-produksi",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        1680
+      ],
+      "id": "57c057aa-01ce-42b6-8ece-c3a5d8f90424",
+      "name": "Proses Produksi",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sosial-ketenagakerjaan",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        1920
+      ],
+      "id": "3b1f40cb-ff96-4f42-ab3b-090204d9e4ca",
+      "name": "Sosial & Ketenagakerjaan",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "energi-emisi",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        2160
+      ],
+      "id": "22d836f1-5173-4119-8231-ecd55b195c8e",
+      "name": "Energi & Emisi",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legalitas-kepatuhan",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        2416
+      ],
+      "id": "d6a98170-afe5-4cb0-b623-5061d13c7765",
+      "name": "Legalitas & Kepatuhan",
+      "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
     }
   ],
   "pinData": {},
@@ -157,22 +245,22 @@
         ]
       ]
     },
-    "Webhook": {
+    "Normalize JSON Output": {
       "main": [
         [
           {
-            "node": "Extract text",
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Normalize JSON Output": {
+    "Extract KTP": {
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Extract text",
             "type": "main",
             "index": 0
           }
@@ -185,7 +273,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "6446dc6e-6f6d-4f2e-a3f1-241f4bc753e7",
+  "versionId": "e0092bcd-bb7a-4cde-868d-933990ce7858",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e901acb807f6f1eb84add1628862abce2439962dc055c79b585eb9f923890bb7"

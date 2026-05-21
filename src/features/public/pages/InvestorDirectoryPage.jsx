@@ -38,13 +38,6 @@ function FilterCheckbox({ label, count, checked, onChange }) {
   )
 }
 
-const typeBadgeTone = {
-  VC: 'bg-white text-[#336699]',
-  Buyer: 'bg-white text-[#c57f44]',
-  Lender: 'bg-white text-[#3f7b58]',
-  Grant: 'bg-white text-[#7b65a9]',
-}
-
 const InvestorDirectoryPage = () => {
   const [search, setSearch] = React.useState('')
   const [selectedTypes, setSelectedTypes] = React.useState(['VC', 'Lender'])
@@ -111,7 +104,7 @@ const InvestorDirectoryPage = () => {
         <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 pb-12 pt-0 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="mt-3 max-w-4xl text-[3.6rem] leading-none tracking-[-0.08em] text-white">
+              <h1 className="mt-10 max-w-4xl text-[3.6rem] leading-none tracking-[-0.08em] text-white">
                 Temui investor & buyer yang sedang mencari Anda.
               </h1>
               <p className="mt-5 max-w-3xl text-[1rem] font-normal leading-8 text-white/75">
@@ -236,10 +229,6 @@ const InvestorDirectoryPage = () => {
                         background: `linear-gradient(90deg, ${investor.themeFrom} 0%, ${investor.themeTo} 100%)`,
                       }}
                     >
-                      <div className="text-[0.8rem] font-bold uppercase tracking-[0.22em]">{investor.type}</div>
-                      <div className={`rounded-full px-3 py-1 text-[0.72rem] font-bold ${typeBadgeTone[investor.type]}`}>
-                        {investor.type}
-                      </div>
                     </div>
 
                     <div className="p-4">
@@ -270,18 +259,7 @@ const InvestorDirectoryPage = () => {
                           </span>
                         ))}
                       </div>
-
-                      <p className="mt-4 border-b border-dashed border-[#e5e4e0] pb-4 text-[0.95rem] font-normal leading-7 text-[#5f5a53]">
-                        {investor.desc}
-                      </p>
-
                       <div className="mt-4 grid grid-cols-3 gap-4">
-                        <div>
-                          <div className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[#8d877f]">
-                            Tiket
-                          </div>
-                          <div className="mt-1 text-[1rem] font-bold text-[#20201c]">{investor.ticket}</div>
-                        </div>
                         <div>
                           <div className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[#8d877f]">
                             Portofolio
