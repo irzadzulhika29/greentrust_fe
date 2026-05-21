@@ -4,11 +4,9 @@ import { Menu, X, ShieldCheck, Leaf } from 'lucide-react'
 import PressButton from '@/components/ui/PressButton'
 import { getAuthPayload } from '@/lib/utils'
 
-// Pages that have a hero section — navbar starts transparent on these
-// Value is the hero height as a fraction of viewport height
-// Prefix entries (ending with *) match any path starting with that prefix
 const HERO_PAGES = {
   '/': 0.8,
+  '/cara-kerja': 0.15,
   '/direktori': 0.5,
   '/investor': 0.5,
   '/investor/': 0.5,
@@ -16,9 +14,7 @@ const HERO_PAGES = {
 }
 
 const getHeroFraction = (pathname) => {
-  // exact match first
   if (HERO_PAGES[pathname] !== undefined) return HERO_PAGES[pathname]
-  // prefix match
   const prefixMatch = Object.keys(HERO_PAGES).find(
     (key) => key.endsWith('/') && pathname.startsWith(key)
   )
@@ -29,7 +25,7 @@ const menuItems = [
   { name: 'Beranda', href: '/', isRoute: true },
   { name: 'UMKM', href: '/direktori', isRoute: true },
   { name: 'Investor', href: '/investor', isRoute: true },
-  { name: 'Cara Kerja', href: '#cara-kerja', isRoute: false },
+  { name: 'Cara Kerja', href: '/cara-kerja', isRoute: true },
 ]
 
 export const Navbar = () => {
@@ -99,25 +95,16 @@ export const Navbar = () => {
                 )
                 return (
                   <li key={item.name}>
-                    {item.isRoute ? (
-                      <Link
-                        to={item.href}
-                        className={`block duration-150 font-medium pb-1 border-b-2 transition-colors ${
-                          isActive
-                            ? 'text-white border-white'
-                            : 'text-white/80 hover:text-white border-transparent'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      <a
-                        href={item.href}
-                        className="text-white/80 hover:text-white block duration-150 font-medium pb-1 border-b-2 border-transparent"
-                      >
-                        {item.name}
-                      </a>
-                    )}
+                    <Link
+                      to={item.href}
+                      className={`block duration-150 font-medium pb-1 border-b-2 transition-colors ${
+                        isActive
+                          ? 'text-white border-white'
+                          : 'text-white/80 hover:text-white border-transparent'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
                   </li>
                 )
               })}
@@ -137,23 +124,13 @@ export const Navbar = () => {
               <ul className="space-y-5 text-base">
                 {menuItems.map((item) => (
                   <li key={item.name}>
-                    {item.isRoute ? (
-                      <Link
-                        to={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className="text-white/80 hover:text-white block duration-150 font-medium"
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      <a
-                        href={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className="text-white/80 hover:text-white block duration-150 font-medium"
-                      >
-                        {item.name}
-                      </a>
-                    )}
+                    <Link
+                      to={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="text-white/80 hover:text-white block duration-150 font-medium"
+                    >
+                      {item.name}
+                    </Link>
                   </li>
                 ))}
               </ul>

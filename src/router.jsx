@@ -11,6 +11,7 @@ import InvestorRegisterPage from '@/features/auth/pages/InvestorRegisterPage'
 
 // Public
 import LandingPage  from '@/features/public/pages/LandingPage'
+import CaraKerjaPage from '@/features/public/pages/CaraKerjaPage'
 import InvestorDirectoryPage from '@/features/public/pages/InvestorDirectoryPage'
 import InvestorDetailPage from '@/features/public/pages/InvestorDetailPage'
 import UmkmDirectoryPage from '@/features/public/pages/UmkmDirectoryPage'
@@ -49,6 +50,7 @@ const AppRouter = () => {
       <Routes>
         {/* Public — no sidebar */}
         <Route path="/"         element={<LandingPage />} />
+        <Route path="/cara-kerja" element={<CaraKerjaPage />} />
         <Route path="/investor" element={<InvestorDirectoryPage />} />
         <Route path="/investor/:profileId" element={<InvestorDetailPage />} />
 

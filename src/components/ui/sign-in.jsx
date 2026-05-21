@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 const InputWrapper = ({ children }) => (
   <div
     className="rounded-xl transition-colors"
@@ -50,8 +48,6 @@ const TestimonialCard = ({ testimonial, delay }) => (
     </div>
   </div>
 )
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 const SignInPage = ({
   title = 'Welcome back',

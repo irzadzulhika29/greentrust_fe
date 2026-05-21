@@ -3,19 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import PressButton from '@/components/ui/PressButton'
 
-/**
- * Reusable confirm modal with success checkmark animation.
- *
- * Props:
- *   title          — modal heading
- *   description    — body copy (string or node)
- *   confirmLabel   — confirm button text (default "Ya, Lanjutkan")
- *   cancelLabel    — cancel button text (default "Batal")
- *   confirmVariant — PressButton variant for confirm (default "primary")
- *   successMessage — text shown after success animation
- *   onConfirm      — async-safe callback; modal shows success then calls onClose
- *   onClose        — close callback
- */
 const ConfirmModal = ({
   title = 'Konfirmasi',
   description,

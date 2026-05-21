@@ -13,17 +13,11 @@ const STEPS = [
 const OnboardingPage = () => {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [identitasDiri, setIdentitasDiri] = useState(null)
-
-  const handleDiriNext = (fields) => {
-    setIdentitasDiri(fields)
+  const handleDiriNext = () => {
     setStep(2)
   }
 
-  const handleBisnisNext = (fields) => {
-    // TODO: submit identitasDiri + fields ke backend
-    console.log('[Onboarding] identitas diri:', identitasDiri)
-    console.log('[Onboarding] identitas bisnis:', fields)
+  const handleBisnisNext = () => {
     navigate('/umkm')
   }
 

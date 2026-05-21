@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
-import { Clock, Star, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getIndicatorHref } from '@/features/umkm/data/evidenceVaultData'
 import { apiFetch } from '@/lib/utils'
 
 const CATEGORY_META = {
-  BB: { color: '#7a5521', tint: '#fbefd7', slug: 'bb' },
-  PP: { color: '#236041', tint: '#dcebdc', slug: 'pp' },
-  PL: { color: '#176174', tint: '#dff5f8', slug: 'pl' },
-  EE: { color: '#6b4b12', tint: '#f7edce', slug: 'ee' },
-  SK: { color: '#934f42', tint: '#fde8e3', slug: 'sk' },
-  LK: { color: '#45457b', tint: '#e7e7fb', slug: 'lk' },
+  BB: { slug: 'bb' },
+  PP: { slug: 'pp' },
+  PL: { slug: 'pl' },
+  EE: { slug: 'ee' },
+  SK: { slug: 'sk' },
+  LK: { slug: 'lk' },
 }
 
-// Normalise API category shape → internal shape
+const ICON_BG = '#f0ece4'
+const ICON_COLOR = '#5f5a53'
+const BAR_COLOR = '#5f5a53'
+
 const normaliseApiCategory = (cat) => ({
   code: cat.code,
   name: cat.name,
@@ -34,8 +37,7 @@ const EvidenceCategoryCard = ({ category }) => {
   const progress = category.required_count > 0
     ? (category.fulfilled_count / category.required_count) * 100
     : 0
-  const isComplete = category.fulfilled_count >= category.required_count
-  const meta = CATEGORY_META[category.code] ?? { color: '#205336', tint: '#e8f0eb', slug: category.code.toLowerCase() }
+  const meta = CATEGORY_META[category.code] ?? { slug: category.code.toLowerCase() }
   const status = getStatus(category.fulfilled_count, category.required_count)
 
   return (
@@ -43,16 +45,11 @@ const EvidenceCategoryCard = ({ category }) => {
       <div className="mb-6 flex items-start justify-between gap-4">
         <div
           className="grid h-12 w-12 place-items-center rounded-lg text-sm font-bold"
-          style={{ backgroundColor: meta.tint, color: meta.color }}
+          style={{ backgroundColor: ICON_BG, color: ICON_COLOR }}
         >
           {category.code}
         </div>
-        <div
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${
-            isComplete ? 'bg-[#dcebdc] text-[#4f8b5e]' : 'bg-[#fbefd7] text-[#c9853e]'
-          }`}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+        <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold">
           {status}
         </div>
       </div>
@@ -74,7 +71,7 @@ const EvidenceCategoryCard = ({ category }) => {
         <div className="h-2 rounded-full bg-[#e9ece8]">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, backgroundColor: meta.color }}
+            style={{ width: `${progress}%`, backgroundColor: BAR_COLOR }}
           />
         </div>
       </div>
@@ -129,7 +126,7 @@ const EvidenceVaultPage = () => {
       <header>
         <div className="flex flex-col gap-5 px-6 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-12">
           <div>
-            <h1 className="m-0 text-4xl leading-none tracking-[-0.06em] text-[#181816]">
+            <h1 className="mb-5 text-4xl leading-none tracking-[-0.06em] text-[#181816]">
               Evidence Vault
             </h1>
             <p className="mt-3 max-w-[58rem] text-base font-normal leading-6 text-[#5f5a53]">
@@ -153,11 +150,11 @@ const EvidenceVaultPage = () => {
             <div className="grid gap-6 xl:grid-cols-[150px_minmax(0,1fr)_140px] xl:items-center">
               <div className="relative grid h-[126px] w-[126px] place-items-center rounded-full">
                 <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 126 126" aria-hidden="true">
-                  <circle cx="63" cy="63" r="53" fill="none" stroke="#efe9df" strokeWidth="12" />
+                  <circle cx="63" cy="63" r="53" fill="none" stroke="#e9ece8" strokeWidth="12" />
                   <circle
                     cx="63" cy="63" r="53"
                     fill="none"
-                    stroke="#c47739"
+                    stroke="#5f5a53"
                     strokeLinecap="round"
                     strokeWidth="12"
                     strokeDasharray={circumference}
@@ -166,7 +163,7 @@ const EvidenceVaultPage = () => {
                 </svg>
                 <div className="relative grid h-[92px] w-[92px] place-items-center rounded-full bg-white">
                   <div className="text-center">
-                    <div className="text-4xl font-bold leading-none tracking-[-0.06em] text-[#080807]">{grs}</div>
+                    <div className="text-4xl font-bold leading-none tracking-[-0.06em] text-[#20201c]">{grs}</div>
                     <div className="mt-2 text-[10px] font-bold uppercase text-[#8d877f]">GRS / 100</div>
                   </div>
                 </div>
@@ -177,23 +174,12 @@ const EvidenceVaultPage = () => {
                   <div className="text-3xl leading-none tracking-[-0.06em] text-[#181816]">
                     GRS Anda <span className="text-[#236041]">{grs} / 100</span>
                   </div>
-                  {grs >= 85 && (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-[#fbefd7] px-4 py-2 text-sm font-bold text-[#c47739]">
-                      <Star className="h-4 w-4 fill-current" />
-                      Unggul
-                    </div>
-                  )}
-                  {grs >= threshold && grs < 85 && (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-[#dcebdc] px-4 py-2 text-sm font-bold text-[#4f8b5e]">
-                      Siap
-                    </div>
-                  )}
                 </div>
 
                 <div className="mt-5">
                   <div className="relative h-2 rounded-full bg-[#e9ece8]">
                     <div
-                      className="h-full rounded-full bg-[#c47739] transition-all duration-500"
+                      className="h-full rounded-full bg-[#5f5a53] transition-all duration-500"
                       style={{ width: `${grsPercent}%` }}
                     />
                     <div
@@ -201,8 +187,8 @@ const EvidenceVaultPage = () => {
                       style={{ left: `${threshold}%` }}
                     />
                   </div>
-                  <div className="mt-3 flex justify-center text-sm font-bold text-[#2f2f2b]">
-                    {threshold} - ambang Passport
+                  <div className="mt-3 flex justify-center text-md font-bold text-[#2f2f2b]">
+                    {threshold} - Batas Ambang Passport
                   </div>
                 </div>
               </div>
@@ -230,20 +216,6 @@ const EvidenceVaultPage = () => {
               <EvidenceCategoryCard category={category} key={category.code} />
             ))
           )}
-        </section>
-
-        <section className="mt-6 rounded-[18px] border border-[#ddd6ca] bg-white p-5 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg border border-[#ddd6ca] bg-[#fbfaf7]">
-              <Clock className="h-4 w-4 text-[#236041]" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-[#20201c]">AI memproses dokumen secara bertahap</div>
-              <div className="text-xs font-semibold text-[#8d877f]">
-                Status final dan hash on-chain akan tampil setelah validasi backend selesai.
-              </div>
-            </div>
-          </div>
         </section>
       </main>
     </div>

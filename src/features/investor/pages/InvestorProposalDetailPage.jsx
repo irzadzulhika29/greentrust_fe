@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Download, CircleX, CircleCheck, Send } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
 import PressButton from '@/components/ui/PressButton'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { apiFetch, proposalAction } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -41,6 +43,7 @@ const InvestorProposalDetailPage = () => {
   const [actionError, setActionError] = useState(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState(null)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   const handleSend = async () => {
     setSendError(null)
@@ -225,7 +228,14 @@ const InvestorProposalDetailPage = () => {
                 variant="primary"
                 className="w-full !flex !items-center !justify-center !gap-2"
                 disabled={sending}
-                onClick={handleSend}
+                onClick={() => setConfirmModal({
+                  action: 'send',
+                  title: 'Kirim Proposal?',
+                  description: 'Proposal akan dikirim ke UMKM. Setelah dikirim, proposal tidak bisa diedit.',
+                  confirmLabel: 'Ya, Kirim',
+                  confirmVariant: 'primary',
+                  successMessage: 'Proposal berhasil dikirim.',
+                })}
               >
                 <Send className="h-4 w-4" />
                 {sending ? 'Mengirim...' : 'Kirim Proposal'}
@@ -244,19 +254,33 @@ const InvestorProposalDetailPage = () => {
                   className="w-full! justify-center! flex! items-center! gap-1.5!"
                   variant="danger"
                   disabled={!!actioning}
-                  onClick={() => handleAction('reject')}
+                  onClick={() => setConfirmModal({
+                    action: 'reject',
+                    title: 'Tolak Proposal?',
+                    description: 'Proposal akan ditolak dan UMKM akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Tolak',
+                    confirmVariant: 'danger',
+                    successMessage: 'Proposal berhasil ditolak.',
+                  })}
                 >
                   <CircleX className="h-4 w-4" />
-                  {actioning === 'reject' ? 'Menolak...' : 'Tolak'}
+                  Tolak
                 </PressButton>
                 <PressButton
                   className="w-full! justify-center! flex! items-center! gap-1.5!"
                   variant="primary"
                   disabled={!!actioning}
-                  onClick={() => handleAction('accept')}
+                  onClick={() => setConfirmModal({
+                    action: 'accept',
+                    title: 'Setujui Proposal?',
+                    description: 'Proposal akan disetujui dan UMKM akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Setujui',
+                    confirmVariant: 'primary',
+                    successMessage: 'Proposal berhasil disetujui.',
+                  })}
                 >
                   <CircleCheck className="h-4 w-4" />
-                  {actioning === 'accept' ? 'Menyetujui...' : 'Setuju'}
+                  Setuju
                 </PressButton>
               </div>
             </div>
@@ -275,6 +299,24 @@ const InvestorProposalDetailPage = () => {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {confirmModal && (
+          <ConfirmModal
+            key="confirm"
+            title={confirmModal.title}
+            description={confirmModal.description}
+            confirmLabel={confirmModal.confirmLabel}
+            confirmVariant={confirmModal.confirmVariant}
+            successMessage={confirmModal.successMessage}
+            onConfirm={() => {
+              if (confirmModal.action === 'send') handleSend()
+              else handleAction(confirmModal.action)
+            }}
+            onClose={() => setConfirmModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

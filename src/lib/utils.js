@@ -5,20 +5,20 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Wrapper around fetch that injects headers needed for ngrok tunnels.
- */
 export function apiFetch(url, options = {}) {
   const headers = new Headers(options.headers ?? {})
   headers.set('ngrok-skip-browser-warning', '1')
-  return fetch(url, { ...options, headers })
+  return fetch(url, { ...options, headers }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('reg_session_token')
+      const isInvestorPath = window.location.pathname.startsWith('/investor')
+      window.location.href = isInvestorPath ? '/investor/login' : '/login'
+    }
+    return res
+  })
 }
 
-/**
- * Decode the auth JWT and return its payload.
- * Returns null if token is missing or malformed.
- * Payload shape: { UserID, RoleName, exp }
- */
 export function getAuthPayload() {
   try {
     const token = localStorage.getItem('auth_token')
@@ -29,10 +29,6 @@ export function getAuthPayload() {
   }
 }
 
-/**
- * Perform a proposal action: send | accept | reject
- * Returns the updated proposal data on success, throws on failure.
- */
 export async function proposalAction(proposalId, action) {
   const token = localStorage.getItem('auth_token') ?? ''
   const res = await apiFetch(

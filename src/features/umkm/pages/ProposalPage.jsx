@@ -1,7 +1,9 @@
 import React from 'react'
 import { Download, FileText, X, Inbox, SendHorizonal, CheckCheck, XCircle, FileText as FileDraft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import PressButton from '@/components/ui/PressButton'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { apiFetch, proposalAction } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -176,6 +178,7 @@ const formatBytes = (bytes) => {
 const ProposalActions = ({ proposalId, onStatusChange }) => {
   const [actioning, setActioning] = React.useState(null)
   const [actionError, setActionError] = React.useState(null)
+  const [confirmModal, setConfirmModal] = React.useState(null)
 
   const handleAction = async (action) => {
     setActioning(action)
@@ -198,19 +201,47 @@ const ProposalActions = ({ proposalId, onStatusChange }) => {
           variant="danger"
           className="w-full !justify-center !text-xs"
           disabled={!!actioning}
-          onClick={() => handleAction('reject')}
+          onClick={() => setConfirmModal({
+            action: 'reject',
+            title: 'Tolak Proposal?',
+            description: 'Proposal akan ditolak dan investor akan mendapat notifikasi.',
+            confirmLabel: 'Ya, Tolak',
+            confirmVariant: 'danger',
+            successMessage: 'Proposal berhasil ditolak.',
+          })}
         >
-          {actioning === 'reject' ? 'Menolak...' : '× Tolak'}
+          × Tolak
         </PressButton>
         <PressButton
           variant="primary"
           className="w-full !justify-center !text-xs"
           disabled={!!actioning}
-          onClick={() => handleAction('accept')}
+          onClick={() => setConfirmModal({
+            action: 'accept',
+            title: 'Terima Proposal?',
+            description: 'Proposal akan diterima dan investor akan mendapat notifikasi.',
+            confirmLabel: 'Ya, Terima',
+            confirmVariant: 'primary',
+            successMessage: 'Proposal berhasil diterima.',
+          })}
         >
-          {actioning === 'accept' ? 'Menyetujui...' : '✓ Setujui'}
+          ✓ Setujui
         </PressButton>
       </div>
+      <AnimatePresence>
+        {confirmModal && (
+          <ConfirmModal
+            key="confirm"
+            title={confirmModal.title}
+            description={confirmModal.description}
+            confirmLabel={confirmModal.confirmLabel}
+            confirmVariant={confirmModal.confirmVariant}
+            successMessage={confirmModal.successMessage}
+            onConfirm={() => handleAction(confirmModal.action)}
+            onClose={() => setConfirmModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -228,7 +259,6 @@ const UmkmProposalPage = () => {
   const [loading, setLoading] = React.useState(true)
   const [fetchError, setFetchError] = React.useState(null)
 
-  // Fetch summary once from 'all' tab for accurate KPI cards
   React.useEffect(() => {
     const token = localStorage.getItem('auth_token') ?? ''
     apiFetch(`${BASE_API}/umkm/proposals?tab=all&sort=newest`, {
@@ -246,7 +276,6 @@ const UmkmProposalPage = () => {
 
   React.useEffect(() => {
     const token = localStorage.getItem('auth_token') ?? ''
-    // draft tab maps to sent on API, filter client-side
     const apiTab = activeTab === 'draft' ? 'sent' : activeTab
     const url = `${BASE_API}/umkm/proposals?tab=${apiTab}&sort=${sort}`
 
@@ -258,14 +287,12 @@ const UmkmProposalPage = () => {
       .then((json) => {
         if (json?.status?.isSuccess) {
           const items = json.data?.items ?? []
-          // filter client-side for draft/sent split
           const filtered = activeTab === 'draft'
             ? items.filter((p) => p.status === 'draft')
             : activeTab === 'sent'
             ? items.filter((p) => p.status !== 'draft')
             : items
           setProposals(filtered)
-          // compute accurate counts when fetching sent tab
           if (activeTab === 'draft' || activeTab === 'sent') {
             setDraftCount(items.filter((p) => p.status === 'draft').length)
             setSentCount(items.filter((p) => p.status !== 'draft').length)

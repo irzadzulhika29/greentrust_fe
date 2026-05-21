@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Download, Send, CircleCheck, CircleX } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
 import PressButton from '@/components/ui/PressButton'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { apiFetch, proposalAction } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -33,6 +35,7 @@ const UmkmProposalDetailPage = () => {
   const [sendError, setSendError] = useState(null)
   const [actioning, setActioning] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   const handleAction = async (action) => {
     setActioning(action)
@@ -44,6 +47,19 @@ const UmkmProposalDetailPage = () => {
       setActionError(err.message ?? 'Gagal. Coba lagi.')
     } finally {
       setActioning(null)
+    }
+  }
+
+  const handleSend = async () => {
+    setSendError(null)
+    setSending(true)
+    try {
+      const updated = await proposalAction(proposalId, 'send')
+      setProposal(updated)
+    } catch (err) {
+      setSendError(err.message ?? 'Gagal mengirim proposal. Coba lagi.')
+    } finally {
+      setSending(false)
     }
   }
 
@@ -61,18 +77,19 @@ const UmkmProposalDetailPage = () => {
       .finally(() => setLoading(false))
   }, [proposalId])
 
-  const handleSend = async () => {
-    setSendError(null)
-    setSending(true)
-    try {
-      const updated = await proposalAction(proposalId, 'send')
-      setProposal(updated)
-    } catch (err) {
-      setSendError(err.message ?? 'Gagal mengirim proposal. Coba lagi.')
-    } finally {
-      setSending(false)
-    }
-  }
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token') ?? ''
+    apiFetch(`${BASE_API}/proposals/${proposalId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.status?.isSuccess && json.data) setProposal(json.data)
+        else throw new Error(json?.message ?? 'Proposal tidak ditemukan')
+      })
+      .catch((err) => setFetchError(err.message))
+      .finally(() => setLoading(false))
+  }, [proposalId])
 
   if (loading) {
     return (
@@ -121,7 +138,14 @@ const UmkmProposalDetailPage = () => {
               variant="primary"
               className="!flex !items-center !gap-2"
               disabled={sending}
-              onClick={handleSend}
+              onClick={() => setConfirmModal({
+                action: 'send',
+                title: 'Kirim Proposal?',
+                description: 'Proposal akan dikirim ke investor. Setelah dikirim, proposal tidak bisa diedit.',
+                confirmLabel: 'Ya, Kirim',
+                confirmVariant: 'primary',
+                successMessage: 'Proposal berhasil dikirim.',
+              })}
             >
               <Send className="h-4 w-4" />
               {sending ? 'Mengirim...' : 'Kirim Proposal'}
@@ -223,19 +247,33 @@ const UmkmProposalDetailPage = () => {
                   variant="danger"
                   className="w-full !flex !items-center !justify-center !gap-1.5"
                   disabled={!!actioning}
-                  onClick={() => handleAction('reject')}
+                  onClick={() => setConfirmModal({
+                    action: 'reject',
+                    title: 'Tolak Proposal?',
+                    description: 'Proposal akan ditolak dan investor akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Tolak',
+                    confirmVariant: 'danger',
+                    successMessage: 'Proposal berhasil ditolak.',
+                  })}
                 >
                   <CircleX className="h-4 w-4" />
-                  {actioning === 'reject' ? 'Menolak...' : 'Tolak'}
+                  Tolak
                 </PressButton>
                 <PressButton
                   variant="primary"
                   className="w-full !flex !items-center !justify-center !gap-1.5"
                   disabled={!!actioning}
-                  onClick={() => handleAction('accept')}
+                  onClick={() => setConfirmModal({
+                    action: 'accept',
+                    title: 'Terima Proposal?',
+                    description: 'Proposal akan diterima dan investor akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Terima',
+                    confirmVariant: 'primary',
+                    successMessage: 'Proposal berhasil diterima.',
+                  })}
                 >
                   <CircleCheck className="h-4 w-4" />
-                  {actioning === 'accept' ? 'Menyetujui...' : 'Terima'}
+                  Terima
                 </PressButton>
               </div>
             </div>
@@ -263,7 +301,14 @@ const UmkmProposalDetailPage = () => {
                 variant="primary"
                 className="w-full !flex !items-center !justify-center !gap-2"
                 disabled={sending}
-                onClick={handleSend}
+                onClick={() => setConfirmModal({
+                  action: 'send',
+                  title: 'Kirim Proposal?',
+                  description: 'Proposal akan dikirim ke investor. Setelah dikirim, proposal tidak bisa diedit.',
+                  confirmLabel: 'Ya, Kirim',
+                  confirmVariant: 'primary',
+                  successMessage: 'Proposal berhasil dikirim.',
+                })}
               >
                 <Send className="h-4 w-4" />
                 {sending ? 'Mengirim...' : 'Kirim Proposal'}
@@ -272,6 +317,24 @@ const UmkmProposalDetailPage = () => {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {confirmModal && (
+          <ConfirmModal
+            key="confirm"
+            title={confirmModal.title}
+            description={confirmModal.description}
+            confirmLabel={confirmModal.confirmLabel}
+            confirmVariant={confirmModal.confirmVariant}
+            successMessage={confirmModal.successMessage}
+            onConfirm={() => {
+              if (confirmModal.action === 'send') handleSend()
+              else handleAction(confirmModal.action)
+            }}
+            onClose={() => setConfirmModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

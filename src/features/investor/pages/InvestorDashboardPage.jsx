@@ -20,7 +20,6 @@ const InvestorDashboardPage = () => {
       .then((json) => {
         if (json?.data) {
           setData(json.data)
-          // If no recommended UMKM from dashboard, fetch from public directory
           if (!json.data.recommended_umkm?.length) {
             apiFetch(`${BASE_API}/umkms?tiers=unggul,siap&sort=grs_desc`)
               .then((r2) => r2.json())

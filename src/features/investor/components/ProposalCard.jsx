@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Download, SendHorizonal, Inbox, CircleX, CircleCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import PressButton from '@/components/ui/PressButton'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { STATUS_STYLES, TYPE_STYLES } from '@/features/investor/constants/proposalConstants'
 import { proposalAction } from '@/lib/utils'
 
@@ -37,8 +39,9 @@ const ProposalCard = ({ p, onStatusChange }) => {
   const statusStyle = STATUS_STYLES[statusLabel] ?? 'bg-[#f4f3ec] text-[#5f5a53]'
   const typeStyle = TYPE_STYLES[p.proposal_type] ?? 'bg-[#f4f3ec] text-[#5f5a53]'
 
-  const [actioning, setActioning] = useState(null) // 'accept' | 'reject'
+  const [actioning, setActioning] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   const handleAction = async (action) => {
     setActioning(action)
@@ -136,25 +139,54 @@ const ProposalCard = ({ p, onStatusChange }) => {
                   className="w-full! justify-center! flex! items-center! gap-1.5!"
                   variant="danger"
                   disabled={!!actioning}
-                  onClick={() => handleAction('reject')}
+                  onClick={() => setConfirmModal({
+                    action: 'reject',
+                    title: 'Tolak Proposal?',
+                    description: 'Proposal akan ditolak dan UMKM akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Tolak',
+                    confirmVariant: 'danger',
+                    successMessage: 'Proposal berhasil ditolak.',
+                  })}
                 >
                   <CircleX className="h-3.5 w-3.5" />
-                  {actioning === 'reject' ? 'Menolak...' : 'Tolak'}
+                  Tolak
                 </PressButton>
                 <PressButton
                   className="w-full! justify-center! flex! items-center! gap-1.5!"
                   variant="primary"
                   disabled={!!actioning}
-                  onClick={() => handleAction('accept')}
+                  onClick={() => setConfirmModal({
+                    action: 'accept',
+                    title: 'Setujui Proposal?',
+                    description: 'Proposal akan disetujui dan UMKM akan mendapat notifikasi.',
+                    confirmLabel: 'Ya, Setujui',
+                    confirmVariant: 'primary',
+                    successMessage: 'Proposal berhasil disetujui.',
+                  })}
                 >
                   <CircleCheck className="h-3.5 w-3.5" />
-                  {actioning === 'accept' ? 'Menyetujui...' : 'Setuju'}
+                  Setuju
                 </PressButton>
               </>
             )}
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {confirmModal && (
+          <ConfirmModal
+            key="confirm"
+            title={confirmModal.title}
+            description={confirmModal.description}
+            confirmLabel={confirmModal.confirmLabel}
+            confirmVariant={confirmModal.confirmVariant}
+            successMessage={confirmModal.successMessage}
+            onConfirm={() => handleAction(confirmModal.action)}
+            onClose={() => setConfirmModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

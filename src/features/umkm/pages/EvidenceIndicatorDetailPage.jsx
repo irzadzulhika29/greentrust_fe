@@ -44,7 +44,7 @@ const UploadDocumentModal = ({
   const fileInputRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [submitState, setSubmitState] = useState("idle"); // idle | loading | success | error
+  const [submitState, setSubmitState] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {

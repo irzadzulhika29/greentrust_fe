@@ -35,15 +35,11 @@ const splitFullName = (fullName = '') => {
   return { firstName, lastName: rest.join(' ') }
 }
 
-// Normalize various date formats to YYYY-MM-DD for <input type="date">
 const toIsoDate = (raw = '') => {
   if (!raw) return ''
-  // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
-  // DD-MM-YYYY or DD/MM/YYYY
   const dmyMatch = raw.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/)
   if (dmyMatch) return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`
-  // Fallback: let Date parse it
   const d = new Date(raw)
   if (!isNaN(d)) return d.toISOString().slice(0, 10)
   return ''
@@ -149,19 +145,15 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
     setUploadError(null)
     setUploadDone(false)
     const url = `${import.meta.env.VITE_N8N_URL}/upload-ktp`
-    console.log('[KTP] POST →', url, ktpFile.name)
     try {
       const formData = new FormData()
       formData.append('ktp', ktpFile)
       const res = await apiFetch(url, { method: 'POST', body: formData })
-      console.log('[KTP] status', res.status)
       if (!res.ok) throw new Error(`Server error: ${res.status}`)
       const payload = await res.json()
-      console.log('[KTP] payload', payload)
       applyOcrResult(payload)
       setUploadDone(true)
     } catch (err) {
-      console.error('[KTP] error', err)
       setUploadError(err.message ?? 'Gagal mengunggah KTP. Coba lagi.')
     } finally {
       setUploading(false)

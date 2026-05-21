@@ -285,89 +285,89 @@ const PassportIssuedView = ({ passportData }) => {
                 className="pointer-events-none absolute -right-16 top-6 h-[300px] w-[300px] opacity-[0.08] lg:-right-10 lg:top-4 lg:h-[380px] lg:w-[380px]"
               />
 
-              <div className="relative p-4 lg:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="relative p-3 lg:p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[#7d7870]">
+                    <div className="text-[0.62rem] font-medium uppercase tracking-[0.18em] text-[#7d7870]">
                       Passport
                     </div>
-                    <div className="text-[0.82rem] font-medium text-[#111111] lg:text-[0.9rem]">
+                    <div className="text-[0.75rem] font-medium text-[#111111]">
                       National Passport ID
                     </div>
                   </div>
 
-                  <div className="inline-flex items-center gap-2.5 self-start">
-                    <div className="grid h-8 w-8 place-items-center rounded-full border border-[#e5e4e0] bg-[#f4f3ec]">
+                  <div className="inline-flex items-center gap-2 self-start">
+                    <div className="grid h-7 w-7 place-items-center rounded-full border border-[#e5e4e0] bg-[#f4f3ec]">
                       <img
                         src="/card_bg.svg"
                         alt=""
                         aria-hidden="true"
-                        className="h-4 w-4 opacity-95"
+                        className="h-3.5 w-3.5 opacity-95"
                       />
                     </div>
-                    <div className="text-[1.05rem] font-semibold tracking-[-0.04em] text-[#205336]">
+                    <div className="text-[0.92rem] font-semibold tracking-[-0.04em] text-[#205336]">
                       Green
                       <span className="font-normal text-[#5f5a53]">Trust</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 lg:grid-cols-[172px_minmax(0,1fr)]">
+                <div className="mt-4 grid gap-3 lg:grid-cols-[140px_minmax(0,1fr)]">
                   <div className="flex flex-col items-center">
-                    <div className="relative grid h-[136px] w-[136px] place-items-center rounded-full">
+                    <div className="relative grid h-[110px] w-[110px] place-items-center rounded-full">
                       <svg
                         className="absolute inset-0 h-full w-full -rotate-90"
-                        viewBox="0 0 136 136"
+                        viewBox="0 0 110 110"
                         aria-hidden="true"
                       >
                         <circle
-                          cx="68"
-                          cy="68"
-                          r="52"
+                          cx="55"
+                          cy="55"
+                          r="42"
                           fill="none"
                           stroke="#dedede"
-                          strokeWidth="13"
+                          strokeWidth="10"
                         />
                         <circle
-                          cx="68"
-                          cy="68"
-                          r="52"
+                          cx="55"
+                          cy="55"
+                          r="42"
                           fill="none"
                           stroke="#c47739"
                           strokeLinecap="round"
-                          strokeWidth="13"
-                          strokeDasharray={`${2 * Math.PI * 52}`}
-                          strokeDashoffset={`${2 * Math.PI * 52 * (1 - grs / 100)}`}
+                          strokeWidth="10"
+                          strokeDasharray={`${2 * Math.PI * 42}`}
+                          strokeDashoffset={`${2 * Math.PI * 42 * (1 - grs / 100)}`}
                         />
                       </svg>
                       <div className="relative text-center">
-                        <div className="text-[3rem] font-semibold leading-none tracking-[-0.08em] text-[#c47739]">
+                        <div className="text-[2.4rem] font-semibold leading-none tracking-[-0.08em] text-[#c47739]">
                           {grs}
                         </div>
-                        <div className="mt-1 text-[0.72rem] font-medium uppercase tracking-[0.08em] text-[#c47739]">
+                        <div className="mt-0.5 text-[0.65rem] font-medium uppercase tracking-[0.08em] text-[#c47739]">
                           GRS
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 inline-flex min-w-[128px] items-center justify-center rounded-[12px] bg-[#c47739] px-4 py-2 text-[0.82rem] font-semibold text-white">
+                    <div className="mt-3 inline-flex min-w-[110px] items-center justify-center rounded-[10px] bg-[#c47739] px-3 py-1.5 text-[0.75rem] font-semibold text-white">
                       {tierLabel}
                     </div>
                   </div>
 
                   <div className="min-w-0 pt-1">
-                    <h1 className="text-[1rem] font-semibold leading-tight tracking-[-0.04em] text-[#111111] lg:text-[1.35rem]">
+                    <h1 className="text-[0.92rem] font-semibold leading-tight tracking-[-0.04em] text-[#111111] lg:text-[1.1rem]">
                       {businessName}
                     </h1>
-                    <div className="mt-2 text-[0.82rem] font-semibold uppercase tracking-[0.08em] text-[#111111] lg:text-[0.88rem]">
+                    <div className="mt-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#111111]">
                       GreenTrust Passport
                     </div>
-                    <div className="mt-1.5 text-[0.82rem] leading-5 text-[#5f5a53]">
+                    <div className="mt-1 text-[0.75rem] leading-5 text-[#5f5a53]">
                       {descriptor ||
                         "Status blockchain aktif dan siap dibagikan ke calon mitra."}
                     </div>
 
-                    <div className="mt-5 grid grid-cols-3 gap-x-2.5 gap-y-3 sm:grid-cols-6">
+                    <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-2.5 sm:grid-cols-6">
                       {categoryScores.map((cat) => {
                         const meta = CATEGORY_COLORS[cat.category_id] ?? {
                           tint: "#eee",
@@ -377,7 +377,7 @@ const PassportIssuedView = ({ passportData }) => {
                         return (
                           <div key={cat.category_id} className="text-center">
                             <div
-                              className="mx-auto grid h-9 w-9 place-items-center rounded-[12px] text-[0.76rem] font-bold"
+                              className="mx-auto grid h-8 w-8 place-items-center rounded-[10px] text-[0.7rem] font-bold"
                               style={{
                                 backgroundColor: meta.tint,
                                 color: meta.color,
@@ -385,7 +385,7 @@ const PassportIssuedView = ({ passportData }) => {
                             >
                               {cat.category_id}
                             </div>
-                            <div className="mt-1.5 text-[0.78rem] font-semibold text-[#111111]">
+                            <div className="mt-1 text-[0.72rem] font-semibold text-[#111111]">
                               {cat.percent}
                             </div>
                           </div>
@@ -396,30 +396,30 @@ const PassportIssuedView = ({ passportData }) => {
                 </div>
               </div>
 
-              <div className="relative border-t border-dashed border-[#9cd4b4] px-4 py-4 lg:px-6 lg:py-5">
-                <div className="flex gap-3">
-                  <div className="flex items-start gap-3">
+              <div className="relative border-t border-dashed border-[#9cd4b4] px-3 py-3 lg:px-4">
+                <div className="flex gap-2.5">
+                  <div className="flex items-start gap-2.5">
                     {qrCodeUrl ? (
                       <img
                         src={qrCodeUrl}
                         alt="QR Code Passport"
-                        className="h-[78px] w-[78px] rounded-[14px] border border-[#e5e4e0] bg-white p-1.5 object-contain"
+                        className="h-[64px] w-[64px] rounded-[12px] border border-[#e5e4e0] bg-white p-1 object-contain"
                       />
                     ) : (
-                      <div className="grid h-[78px] w-[78px] place-items-center rounded-[14px] border border-[#e5e4e0] bg-[#fbfaf7] text-[0.72rem] font-bold tracking-[0.2em] text-[#20201c]">
+                      <div className="grid h-[64px] w-[64px] place-items-center rounded-[12px] border border-[#e5e4e0] bg-[#fbfaf7] text-[0.65rem] font-bold tracking-[0.2em] text-[#20201c]">
                         QR
                       </div>
                     )}
                   </div>
 
                   <div className="w-full">
-                    <div className="text-[0.76rem] uppercase tracking-[0.16em] text-[#20201c]">
+                    <div className="text-[0.68rem] uppercase tracking-[0.16em] text-[#20201c]">
                       greentrust.id/passport/
                     </div>
-                    <div className="mt-1 break-words text-[1.05rem] font-semibold leading-tight tracking-[-0.04em] text-[#111111] lg:text-[1.22rem]">
+                    <div className="mt-0.5 break-words text-[0.92rem] font-semibold leading-tight tracking-[-0.04em] text-[#111111] lg:text-[1.05rem]">
                       {slug}
                     </div>
-                    <div className="flex justify-between mt-2.5 break-all text-[0.78rem] text-[#20201c]">
+                    <div className="flex justify-between mt-2 break-all text-[0.72rem] text-[#20201c]">
                       <div>
                         {txShort !== "--"
                           ? txShort
@@ -430,7 +430,7 @@ const PassportIssuedView = ({ passportData }) => {
                         </span>
                       </div>
                       <div className="text-left lg:text-right">
-                        <div className="text-[0.78rem] leading-5 text-[#20201c]">
+                        <div className="text-[0.72rem] leading-5 text-[#20201c]">
                           {issuedCaption}
                         </div>
                       </div>

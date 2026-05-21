@@ -23,7 +23,6 @@ const InvestorProposalPage = () => {
 
   React.useEffect(() => {
     const token = localStorage.getItem('auth_token') ?? ''
-    // draft tab maps to sent on API, filter client-side
     const apiTab = activeTab === 'draft' ? 'sent' : activeTab === 'incoming' ? 'requests' : activeTab
     const url = `${BASE_API}/investor/proposals?tab=${apiTab}`
 
@@ -35,7 +34,6 @@ const InvestorProposalPage = () => {
       .then((json) => {
         if (json?.status?.isSuccess) {
           const items = json.data?.items ?? []
-          // filter client-side for draft/sent split
           const filtered = activeTab === 'draft'
             ? items.filter((p) => p.status === 'draft')
             : activeTab === 'sent'
@@ -44,7 +42,6 @@ const InvestorProposalPage = () => {
           setProposals(filtered)
           setSummary(json.data?.summary ?? null)
           setTabs(json.data?.tabs ?? {})
-          // compute accurate counts when fetching sent tab
           if (activeTab === 'draft' || activeTab === 'sent') {
             setDraftCount(items.filter((p) => p.status === 'draft').length)
             setSentCount(items.filter((p) => p.status !== 'draft').length)

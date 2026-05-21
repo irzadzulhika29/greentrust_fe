@@ -117,7 +117,7 @@ const InvestorProfilPage = () => {
       {/* Header */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[2rem] font-semibold text-[#111111]">Pengaturan Profil</h1>
+          <h1 className="mb-5 text-[2rem] font-semibold text-[#111111]">Pengaturan Profil</h1>
           <p className="mt-5 text-[0.88rem] text-[#5f5a53]">
             Kelola tampilan profil publik Anda di direktori investor.
           </p>

@@ -12,15 +12,9 @@ import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/utils'
 import PressButton from '@/components/ui/PressButton'
 
-// Color mapping per category code — not returned by API
-const CATEGORY_COLORS = {
-  BB: { color: '#7a5521', tint: '#fbefd7' },
-  PP: { color: '#236041', tint: '#dcebdc' },
-  PL: { color: '#176174', tint: '#dff5f8' },
-  EE: { color: '#6b4b12', tint: '#f7edce' },
-  SK: { color: '#934f42', tint: '#fde8e3' },
-  LK: { color: '#45457b', tint: '#e7e7fb' },
-}
+const ICON_BG = '#f0ece4'
+const ICON_COLOR = '#5f5a53'
+const BAR_COLOR = '#5f5a53'
 
 const activities = [
   { icon: Check, title: 'AI klasifikasi 2 dokumen baru', meta: 'Bahan Baku - Energi - 12 menit lalu', tone: '#4f8b5e' },
@@ -42,7 +36,6 @@ const UmkmDashboardPage = () => {
   const navigate = useNavigate()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
@@ -54,18 +47,16 @@ const UmkmDashboardPage = () => {
         if (json?.data) setSummary(json.data)
         else throw new Error(json?.message ?? 'Gagal memuat data')
       })
-      .catch((err) => setFetchError(err.message))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
   const grsScore = summary?.grs_score ?? 0
   const passportStatus = summary?.passport_status ?? 'draft'
-  const passportThreshold = summary?.passport_threshold ?? 70
   const categories = (summary?.categories ?? []).map((cat) => ({
     ...cat,
     current: cat.fulfilled_count,
     total: cat.required_count,
-    ...(CATEGORY_COLORS[cat.code] ?? { color: '#555', tint: '#eee' }),
   }))
 
   return (
@@ -73,15 +64,8 @@ const UmkmDashboardPage = () => {
       <header>
         <div className="px-6 py-3 lg:px-12">
           <h1 className="m-0 text-[2.35rem] leading-none tracking-[-0.06em] text-[#181816]">
-            Dashboard.
+            Dashboard
           </h1>
-          <p className="mt-3 text-[0.98rem] font-medium text-[#5f5a53]">
-            {loading
-              ? 'Memuat data...'
-              : fetchError
-              ? fetchError
-              : `GRS Anda saat ini: ${grsScore} / 100`}
-          </p>
         </div>
       </header>
 
@@ -115,18 +99,13 @@ const UmkmDashboardPage = () => {
                 </div>
 
                 <div className="ml-6">
-                  <div className="text-[0.72rem] font-semibold uppercase tracking-[0.34em] text-[#8d877f]">
+                  <div className="text-sm font-semibold uppercase text-[#8d877f]">
                     Green Readiness Score
                   </div>
                   <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#fbefd7] px-4 py-2 text-[0.9rem] font-bold text-[#c47739]">
                     <span aria-hidden="true">★</span>
                     {passportStatus === 'active' ? 'Aktif' : passportStatus === 'draft' ? 'Draft' : passportStatus}
                   </div>
-                  <p className="mt-4 max-w-[25rem] text-xs font-medium leading-6 text-[#5f5a53]">
-                    {grsScore >= passportThreshold
-                      ? 'Passport Anda aktif dan tampil di landing page.'
-                      : `Butuh GRS ≥ ${passportThreshold} untuk menerbitkan Passport. Tambah dokumen untuk meningkatkan skor.`}
-                  </p>
                 </div>
               </div>
 
@@ -182,16 +161,16 @@ const UmkmDashboardPage = () => {
                   >
                     <div
                       className="grid h-10 w-10 place-items-center rounded-lg text-[0.86rem] font-black"
-                      style={{ backgroundColor: category.tint, color: category.color }}
+                      style={{ backgroundColor: ICON_BG, color: ICON_COLOR }}
                     >
                       {category.code}
                     </div>
                     <div className="min-w-0">
                       <div className="truncate text-[0.9rem] font-bold text-[#20201c]">{category.name}</div>
-                      <div className="mt-2 h-1.5 rounded-full bg-white">
+                      <div className="mt-2 h-1.5 rounded-full bg-[#e9ece8]">
                         <div
                           className="h-full rounded-full"
-                          style={{ width: `${progress}%`, backgroundColor: category.color }}
+                          style={{ width: `${progress}%`, backgroundColor: BAR_COLOR }}
                         />
                       </div>
                     </div>

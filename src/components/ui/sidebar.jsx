@@ -109,9 +109,14 @@ const SidebarPanel = ({ collapsed, onNavigate }) => {
   )
 }
 
-const Sidebar = () => {
+const Sidebar = ({ onCollapse }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+
+  const handleCollapse = (val) => {
+    setCollapsed(val)
+    onCollapse?.(val)
+  }
 
   return (
     <>
@@ -121,7 +126,7 @@ const Sidebar = () => {
           {/* Toggle button */}
           <button
             type="button"
-            onClick={() => setCollapsed((c) => !c)}
+            onClick={() => handleCollapse(!collapsed)}
             className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#5f5a53] ring-1 ring-[#e5e4e0] transition-colors hover:text-[#111111]"
           >
             {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
