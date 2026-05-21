@@ -39,7 +39,6 @@ const LoginPage = () => {
           <div className="relative z-10 mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center py-2 lg:mx-0">
             <h1
               className="animate-element animate-delay-200 mt-2 text-[2rem] leading-[0.95] tracking-[-0.06em] text-[#171717] sm:text-[2.4rem]"
-              style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
             >
               Selamat datang kembali.
             </h1>
@@ -129,7 +128,6 @@ const LoginPage = () => {
               </div>
               <h2
                 className="animate-slide-right animate-delay-500 mt-4 max-w-[14ch] text-[3.2rem] leading-[0.98] tracking-[-0.05em] text-[#f6f2ea] xl:text-[4rem]"
-                style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
               >
                 Praktik hijau bukan janji, melainkan <span className="font-normal text-[#9ec27f] italic">nota, foto, dan hash</span> yang bisa diperiksa.
               </h2>
@@ -161,7 +159,6 @@ const LoginPage = () => {
                     <div>
                       <div
                         className="text-[1.7rem] leading-none tracking-[-0.05em] text-[#2e2a25]"
-                        style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
                       >
                         Kopi Bumi Toraja
                       </div>

@@ -7,14 +7,89 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState('umkm');
   const [showOtp, setShowOtp] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [otpError, setOtpError] = useState(null);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '', confirm_password: '' });
 
-  const handleSubmit = (e) => {
+  const handleFormChange = (field, value) =>
+    setFormData((cur) => ({ ...cur, [field]: value }));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowOtp(true);
+    setError(null);
+
+    if (formData.password !== formData.confirm_password) {
+      setError('Password dan konfirmasi password tidak sama.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          confirm_password: formData.confirm_password,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`);
+      }
+
+      if (json?.data?.session_token) {
+        sessionStorage.setItem('session_token', json.data.session_token);
+      }
+
+      setShowOtp(true);
+    } catch (err) {
+      setError(err.message ?? 'Pendaftaran gagal. Coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOtpComplete = async (code) => {
+    setOtpError(null);
+    setOtpVerifying(true);
+    const token = sessionStorage.getItem('session_token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token ?? '',
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`);
+      }
+
+      // Update session token dengan yang baru (verified: true)
+      if (json?.data?.session_token) {
+        sessionStorage.setItem('session_token', json.data.session_token);
+      }
+
+      navigate('/onboarding');
+    } catch (err) {
+      setOtpError(err.message ?? 'Kode OTP salah. Coba lagi.');
+    } finally {
+      setOtpVerifying(false);
+    }
   };
 
   return (
-    <div className="h-screen overflow-hidden grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] font-['Inter']">
+    <div className="h-screen overflow-hidden grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
       {/* Left Pane */}
       <div className="bg-[#f6f2ea] flex flex-col relative px-6 py-4 sm:px-10 lg:px-14 lg:py-5 xl:px-16 overflow-hidden border-b border-[#d6d1c7] lg:border-b-0 lg:border-r">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(70,120,79,0.08),transparent_34%)]" />
@@ -34,18 +109,22 @@ const RegisterPage = () => {
         {/* Form area */}
         <div className="relative z-10 mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center py-2 lg:mx-0">
           {showOtp ? (
-            <OtpInput
-              inline
-              onComplete={(val) => {
-                console.log('OTP verified:', val);
-                navigate('/onboarding');
-              }}
-            />
+            <div>
+              <OtpInput
+                inline
+                onComplete={handleOtpComplete}
+              />
+              {otpVerifying && (
+                <p className="mt-3 text-[0.78rem] text-[#8d877f]">Memverifikasi kode...</p>
+              )}
+              {otpError && (
+                <p className="mt-3 text-[0.75rem] text-red-600 font-medium">{otpError}</p>
+              )}
+            </div>
           ) : (
             <>
               <h1
                 className="mt-2 text-[2rem] leading-[0.95] tracking-[-0.06em] text-[#171717] sm:text-[2.4rem] mb-2.5"
-                style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
               >
                 Mulai bukti hijau Anda hari ini.
               </h1>
@@ -100,7 +179,10 @@ const RegisterPage = () => {
                   </label>
                   <input
                     type="email"
-                    defaultValue="siti.rahayu@batiksiti.id"
+                    required
+                    value={formData.email}
+                    onChange={(e) => handleFormChange('email', e.target.value)}
+                    placeholder="nama@usaha.id"
                     className="h-10 w-full rounded-lg border border-[#d8d3ca] bg-white px-3.5 text-[0.88rem] text-[#1c1c1c] outline-none transition focus:border-[#2b6840] focus:ring-4 focus:ring-[#2b6840]/10"
                   />
                 </div>
@@ -113,7 +195,10 @@ const RegisterPage = () => {
                     </label>
                     <input
                       type="password"
-                      defaultValue="••••••••••"
+                      required
+                      value={formData.password}
+                      onChange={(e) => handleFormChange('password', e.target.value)}
+                      placeholder="Min. 8 karakter"
                       className="h-10 w-full rounded-lg border border-[#d8d3ca] bg-white px-3.5 text-[0.88rem] text-[#1c1c1c] outline-none transition focus:border-[#2b6840] focus:ring-4 focus:ring-[#2b6840]/10 tracking-[0.2em]"
                     />
                   </div>
@@ -123,7 +208,10 @@ const RegisterPage = () => {
                     </label>
                     <input
                       type="password"
-                      defaultValue="••••••••••"
+                      required
+                      value={formData.confirm_password}
+                      onChange={(e) => handleFormChange('confirm_password', e.target.value)}
+                      placeholder="Ulangi password"
                       className="h-10 w-full rounded-lg border border-[#d8d3ca] bg-white px-3.5 text-[0.88rem] text-[#1c1c1c] outline-none transition focus:border-[#2b6840] focus:ring-4 focus:ring-[#2b6840]/10 tracking-[0.2em]"
                     />
                   </div>
@@ -135,11 +223,16 @@ const RegisterPage = () => {
                   8+ karakter · huruf besar · angka · simbol
                 </div>
 
+                {/* Error */}
+                {error && (
+                  <p className="text-[0.75rem] text-red-600 font-medium">{error}</p>
+                )}
+
                 {/* Checkbox */}
                 <label className="flex items-center gap-2.5 text-[0.8rem] text-[#55554f]">
                   <input
                     type="checkbox"
-                    defaultChecked
+                    required
                     className="h-3.5 w-3.5 rounded border-[#b9c7b5] text-[#2f6b47] focus:ring-[#2f6b47] flex-shrink-0 accent-emerald-800"
                   />
                   <span>
@@ -154,9 +247,10 @@ const RegisterPage = () => {
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="h-10 w-full rounded-lg bg-[#101310] text-[0.88rem] font-semibold text-white shadow-[0_18px_35px_rgba(16,19,16,0.18)] transition hover:-translate-y-0.5 hover:bg-[#171c17]"
+                  disabled={submitting}
+                  className="h-10 w-full rounded-lg bg-[#101310] text-[0.88rem] font-semibold text-white shadow-[0_18px_35px_rgba(16,19,16,0.18)] transition hover:-translate-y-0.5 hover:bg-[#171c17] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
-                  Buat Akun &amp; Kirim Verifikasi
+                  {submitting ? 'Mendaftarkan...' : 'Buat Akun & Kirim Verifikasi'}
                 </button>
               </form>
 
@@ -180,10 +274,9 @@ const RegisterPage = () => {
           <div className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#9dbd90] mb-4">
             Onboarding
           </div>
-          <h2
-            className="text-[3.2rem] leading-[0.98] tracking-[-0.05em] text-white mb-8 xl:text-[4rem]"
-            style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
-          >
+            <h2
+              className="text-[3.2rem] leading-[0.98] tracking-[-0.05em] text-white mb-8 xl:text-[4rem]"
+            >
             Setelah daftar, Anda akan melalui{' '}
             <span className="font-normal text-[#A1D0AA] italic">5 langkah</span> singkat.
           </h2>
