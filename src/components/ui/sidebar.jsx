@@ -19,7 +19,7 @@ const navItems = [
   { label: 'Dashboard', icon: BarChart3, href: '/umkm' },
   { label: 'Evidence Vault', icon: Box, href: '/umkm/evidence' },
   { label: 'Green Passport', icon: Diamond, href: '/umkm/passport' },
-  { label: 'Proposal', icon: Send, badge: '1' },
+  { label: 'Proposal', icon: Send, href: '/umkm/proposal', badge: '1' },
   { label: 'Profil Bisnis', icon: Circle, href: '/umkm/profile' },
   { label: 'Katalog Produk', icon: FileArchive },
   { label: 'Aktivitas & Audit', icon: History },

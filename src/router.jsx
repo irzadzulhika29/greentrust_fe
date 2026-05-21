@@ -24,6 +24,8 @@ import UmkmEvidenceVault from '@/features/umkm/pages/EvidenceVaultPage'
 import UmkmEvidenceIndicatorDetail from '@/features/umkm/pages/EvidenceIndicatorDetailPage'
 import UmkmPassport from '@/features/umkm/pages/PassportPage'
 import UmkmProfile   from '@/features/umkm/pages/ProfilePage'
+import UmkmProposal  from '@/features/umkm/pages/ProposalPage'
+import UmkmProposalBaru from '@/features/umkm/pages/ProposalBaruPage'
 
 // Auditor
 import AuditorDashboard from '@/features/auditor/pages/DashboardPage'
@@ -64,6 +66,8 @@ const AppRouter = () => {
         <Route path="/umkm/passport" element={<AppLayout><UmkmPassport /></AppLayout>} />
         <Route path="/umkm/claim" element={<Navigate to="/umkm/passport" replace />} />
         <Route path="/umkm/profile" element={<AppLayout><UmkmProfile /></AppLayout>} />
+        <Route path="/umkm/proposal" element={<AppLayout><UmkmProposal /></AppLayout>} />
+        <Route path="/umkm/proposal/baru" element={<AppLayout><UmkmProposalBaru /></AppLayout>} />
 
         {/* Auditor — with sidebar */}
         <Route path="/auditor"         element={<AppLayout><AuditorDashboard /></AppLayout>} />
