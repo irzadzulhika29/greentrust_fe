@@ -1,4 +1,5 @@
 import { Basic as OtpInput } from '@/components/ui/otp-input'
+import PressButton from '@/components/ui/PressButton'
 
 const RegisterForm = ({
   email,
@@ -13,6 +14,7 @@ const RegisterForm = ({
   otpError,
   onOtpComplete,
   submitLabel,
+  disableValidation = false,
 }) => {
   if (showOtp) {
     return (
@@ -29,7 +31,7 @@ const RegisterForm = ({
   }
 
   return (
-    <form className="mt-5 space-y-3.5" onSubmit={onSubmit}>
+    <form className="mt-5 space-y-3.5" noValidate={disableValidation} onSubmit={onSubmit}>
       <div>
         <label className="mb-1 block text-[0.7rem] font-medium text-[#7a746b]">
           Email aktif
@@ -38,7 +40,7 @@ const RegisterForm = ({
           className="h-10.5 w-full rounded-xl border border-[#d8d3ca] bg-white px-3.5 text-[0.9rem] text-[#1c1c1c] outline-none transition-colors duration-200 focus:border-[#205336] focus:ring-4 focus:ring-[#205336]/10"
           onChange={(e) => onFieldChange('email', e.target.value)}
           placeholder="nama@usaha.id"
-          required
+          required={!disableValidation}
           type="email"
           value={email}
         />
@@ -53,7 +55,7 @@ const RegisterForm = ({
             className="h-10.5 w-full rounded-xl border border-[#d8d3ca] bg-white px-3.5 text-[0.9rem] text-[#1c1c1c] outline-none transition-colors duration-200 focus:border-[#205336] focus:ring-4 focus:ring-[#205336]/10"
             onChange={(e) => onFieldChange('password', e.target.value)}
             placeholder="Min. 8 karakter"
-            required
+            required={!disableValidation}
             type="password"
             value={password}
           />
@@ -66,7 +68,7 @@ const RegisterForm = ({
             className="h-10.5 w-full rounded-xl border border-[#d8d3ca] bg-white px-3.5 text-[0.9rem] text-[#1c1c1c] outline-none transition-colors duration-200 focus:border-[#205336] focus:ring-4 focus:ring-[#205336]/10"
             onChange={(e) => onFieldChange('confirm_password', e.target.value)}
             placeholder="Ulangi password"
-            required
+            required={!disableValidation}
             type="password"
             value={confirmPassword}
           />
@@ -83,7 +85,7 @@ const RegisterForm = ({
       <label className="grid grid-cols-[auto_1fr] gap-3 pt-1 text-[0.8rem] leading-5.5 text-[#5f5a53]">
         <input
           className="mt-1 h-4 w-4 rounded border-[#b9c7b5] text-[#2f6b47] accent-emerald-800 focus:ring-[#2f6b47]"
-          required
+          required={!disableValidation}
           type="checkbox"
         />
         <span>
@@ -99,13 +101,9 @@ const RegisterForm = ({
         </span>
       </label>
 
-      <button
-        className="h-10.5 w-full rounded-xl bg-[#101310] text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:bg-[#171c17] disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={submitting}
-        type="submit"
-      >
+      <PressButton type="submit" variant="primary" disabled={submitting} className="h-10.5 w-full text-[0.9rem]">
         {submitting ? 'Mendaftarkan...' : submitLabel}
-      </button>
+      </PressButton>
     </form>
   )
 }

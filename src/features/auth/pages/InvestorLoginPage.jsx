@@ -18,7 +18,7 @@ const InvestorLoginPage = () => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.currentTarget).entries())
     console.log('Investor login:', data)
-    navigate('/investor')
+    navigate('/investor/dashboard')
   }
 
   const leftPanel = (

@@ -6,6 +6,7 @@ import LoginPage    from '@/features/auth/pages/LoginPage'
 import OnboardingPage from '@/features/auth/pages/OnboardingPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import InvestorLoginPage from '@/features/auth/pages/InvestorLoginPage'
+import InvestorOnboardingPage from '@/features/auth/pages/InvestorOnboardingPage'
 import InvestorRegisterPage from '@/features/auth/pages/InvestorRegisterPage'
 
 // Public
@@ -49,12 +50,6 @@ const AppRouter = () => {
         <Route path="/investor/:slug" element={<InvestorDetailPage />} />
 
         {/* Investor dashboard — with sidebar */}
-        <Route path="/investor" element={<InvestorLayout />}>
-          <Route path="dashboard" element={<InvestorDashboardPage />} />
-          <Route path="proposal" element={<InvestorProposalPage />} />
-          <Route path="profil" element={<InvestorProfilPage />} />
-          <Route path="disimpan" element={<InvestorDisimpanPage />} />
-        </Route>
         <Route path="/direktori" element={<UmkmDirectoryPage />} />
         <Route path="/passport/:slug" element={<PassportDetailPage />} />
         <Route path="/login"    element={<LoginPage />} />
@@ -62,6 +57,20 @@ const AppRouter = () => {
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/investor/register" element={<InvestorRegisterPage />} />
+        <Route path="/investor/onboarding" element={<InvestorOnboardingPage />} />
+
+        <Route path="/investor/dashboard" element={<InvestorLayout />}>
+          <Route index element={<InvestorDashboardPage />} />
+        </Route>
+        <Route path="/investor/proposal" element={<InvestorLayout />}>
+          <Route index element={<InvestorProposalPage />} />
+        </Route>
+        <Route path="/investor/profil" element={<InvestorLayout />}>
+          <Route index element={<InvestorProfilPage />} />
+        </Route>
+        <Route path="/investor/disimpan" element={<InvestorLayout />}>
+          <Route index element={<InvestorDisimpanPage />} />
+        </Route>
 
         {/* UMKM — with sidebar */}
         <Route path="/umkm" element={<AppLayout><UmkmDashboard /></AppLayout>} />

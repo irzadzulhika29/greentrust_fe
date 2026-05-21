@@ -1,3 +1,5 @@
+import PressButton from '@/components/ui/PressButton'
+
 const LoginForm = ({
   defaultEmail,
   defaultPassword = '',
@@ -49,12 +51,9 @@ const LoginForm = ({
         <span>Ingat saya di perangkat ini</span>
       </label>
 
-      <button
-        className="h-10.5 w-full rounded-xl bg-[#101310] text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:bg-[#171c17]"
-        type="submit"
-      >
+      <PressButton type="submit" variant="primary" className="h-10.5 w-full text-[0.9rem]">
         {submitLabel}
-      </button>
+      </PressButton>
 
       <div className="flex items-center gap-3 pt-0.5">
         <div className="h-px flex-1 bg-[#ddd7cd]" />
@@ -62,12 +61,9 @@ const LoginForm = ({
         <div className="h-px flex-1 bg-[#ddd7cd]" />
       </div>
 
-      <button
-        className="h-10.5 w-full rounded-xl border border-[#d8d3ca] bg-white text-[0.88rem] font-medium text-[#171717] transition-colors duration-200 hover:bg-[#f4f3ec]"
-        type="button"
-      >
+      <PressButton type="button" variant="ghost" className="h-10.5 w-full text-[0.88rem] font-medium">
         {secondaryLabel}
-      </button>
+      </PressButton>
     </form>
   )
 }
