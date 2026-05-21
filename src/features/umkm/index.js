@@ -1,3 +1,5 @@
 export { default as DashboardPage } from './pages/DashboardPage'
-export { default as ClaimPage } from './pages/ClaimPage'
+export { default as EvidenceVaultPage } from './pages/EvidenceVaultPage'
+export { default as EvidenceIndicatorDetailPage } from './pages/EvidenceIndicatorDetailPage'
+export { default as PassportPage } from './pages/PassportPage'
 export { default as ProfilePage } from './pages/ProfilePage'
