@@ -8,10 +8,15 @@ import RegisterPage from '@/features/auth/pages/RegisterPage'
 
 // Public
 import LandingPage  from '@/features/public/pages/LandingPage'
+import InvestorDirectoryPage from '@/features/public/pages/InvestorDirectoryPage'
+import UmkmDirectoryPage from '@/features/public/pages/UmkmDirectoryPage'
+import PassportDetailPage from '@/features/public/pages/PassportDetailPage'
 
 // UMKM
 import UmkmDashboard from '@/features/umkm/pages/DashboardPage'
-import UmkmClaim     from '@/features/umkm/pages/ClaimPage'
+import UmkmEvidenceVault from '@/features/umkm/pages/EvidenceVaultPage'
+import UmkmEvidenceIndicatorDetail from '@/features/umkm/pages/EvidenceIndicatorDetailPage'
+import UmkmPassport from '@/features/umkm/pages/PassportPage'
 import UmkmProfile   from '@/features/umkm/pages/ProfilePage'
 
 // Auditor
@@ -30,13 +35,19 @@ const AppRouter = () => {
       <Routes>
         {/* Public — no sidebar */}
         <Route path="/"         element={<LandingPage />} />
+        <Route path="/investor" element={<InvestorDirectoryPage />} />
+        <Route path="/direktori" element={<UmkmDirectoryPage />} />
+        <Route path="/passport/:slug" element={<PassportDetailPage />} />
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* UMKM — with sidebar */}
         <Route path="/umkm" element={<AppLayout><UmkmDashboard /></AppLayout>} />
-        <Route path="/umkm/claim"   element={<AppLayout><UmkmClaim /></AppLayout>} />
+        <Route path="/umkm/evidence" element={<AppLayout><UmkmEvidenceVault /></AppLayout>} />
+        <Route path="/umkm/evidence/:indicatorCode" element={<AppLayout><UmkmEvidenceIndicatorDetail /></AppLayout>} />
+        <Route path="/umkm/passport" element={<AppLayout><UmkmPassport /></AppLayout>} />
+        <Route path="/umkm/claim" element={<Navigate to="/umkm/passport" replace />} />
         <Route path="/umkm/profile" element={<AppLayout><UmkmProfile /></AppLayout>} />
 
         {/* Auditor — with sidebar */}
