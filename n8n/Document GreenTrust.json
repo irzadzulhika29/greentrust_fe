@@ -1,0 +1,200 @@
+{
+  "name": "Document GreenTrust",
+  "nodes": [
+    {
+      "parameters": {
+        "inputDataFieldName": "KTP",
+        "options": {}
+      },
+      "type": "n8n-nodes-tesseractjs.tesseractNode",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -416
+      ],
+      "id": "6e7eeba0-ce6a-4855-a0db-36e7ef717077",
+      "name": "Tesseract"
+    },
+    {
+      "parameters": {
+        "formTitle": "FILE REGISTRATION",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "KTP",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -928,
+        -160
+      ],
+      "id": "5e5b4e82-616c-4543-a666-0af95f302592",
+      "name": "On form submission",
+      "webhookId": "1335b60d-73e6-4508-b120-bf8829a046c0"
+    },
+    {
+      "parameters": {
+        "binaryProperty": "KTP",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -160
+      ],
+      "id": "853b3328-3c84-49a0-a809-d555027b6a91",
+      "name": "Extract text",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "VIEGfjgKxzgis66f",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Ekstrak data KTP dari teks OCR berikut dan kembalikan hasilnya sesuai structured output parser yang terhubung.\n\nAturan:\n- Gunakan hanya data yang benar-benar ada di OCR.\n- Pertahankan format string apa adanya, termasuk NIK, tanggal, RT/RW.\n- Pisahkan `tempat_lahir` dan `tanggal_lahir` dari field `Tempat/Tgl Lahir`.\n- Pisahkan `rt` dan `rw` dari field `RT/RW`.\n- Jika nilai tidak ditemukan, isi dengan string kosong.\n- Jangan tambahkan penjelasan di luar output terstruktur.\n\nOCR KTP:\n{{ $json.pages[0].markdown }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -512,
+        -160
+      ],
+      "id": "7b31286f-84e8-4a95-be96-e3e20146f3c4",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "deepseek-v4-flash",
+          "mode": "list",
+          "cachedResultName": "deepseek-v4-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        48
+      ],
+      "id": "0e231ce3-cdb8-432d-8744-22876d8fd3c1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "q7aB7V0hHKxRDm6k",
+          "name": "Sumopod AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"provinsi\": { \"type\": \"string\" },\n    \"kota_kabupaten\": { \"type\": \"string\" },\n    \"nik\": { \"type\": \"string\" },\n    \"nama\": { \"type\": \"string\" },\n    \"tempat_lahir\": { \"type\": \"string\" },\n    \"tanggal_lahir\": { \"type\": \"string\" },\n    \"jenis_kelamin\": { \"type\": \"string\" },\n    \"golongan_darah\": { \"type\": \"string\" },\n    \"alamat\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"jalan\": { \"type\": \"string\" },\n        \"rt\": { \"type\": \"string\" },\n        \"rw\": { \"type\": \"string\" },\n        \"kel_desa\": { \"type\": \"string\" },\n        \"kecamatan\": { \"type\": \"string\" }\n      },\n      \"required\": [\"jalan\", \"rt\", \"rw\", \"kel_desa\", \"kecamatan\"]\n    },\n    \"agama\": { \"type\": \"string\" },\n    \"status_perkawinan\": { \"type\": \"string\" },\n    \"pekerjaan\": { \"type\": \"string\" },\n    \"kewarganegaraan\": { \"type\": \"string\" },\n    \"berlaku_hingga\": { \"type\": \"string\" },\n    \"tanggal_terbit\": { \"type\": \"string\" },\n    \"tempat_terbit\": { \"type\": \"string\" }\n  },\n  \"required\": [\n    \"provinsi\", \"kota_kabupaten\", \"nik\", \"nama\", \"tempat_lahir\", \n    \"tanggal_lahir\", \"jenis_kelamin\", \"golongan_darah\", \"alamat\", \n    \"agama\", \"status_perkawinan\", \"pekerjaan\", \"kewarganegaraan\", \n    \"berlaku_hingga\", \"tanggal_terbit\", \"tempat_terbit\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        48
+      ],
+      "id": "9d4ebcfc-265b-448f-a78d-1d11d8292b85",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output ?? $json.text ?? $json.response ?? $json;\n\nif (typeof raw === 'string') {\n  return [{ json: JSON.parse(raw) }];\n}\n\nif (raw && typeof raw === 'object') {\n  return [{ json: raw }];\n}\n\nthrow new Error('Workflow tidak menghasilkan object JSON yang valid.');"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -160
+      ],
+      "id": "0efc2c53-0d1b-4f13-9ee5-5f39be0af455",
+      "name": "Normalize JSON Output"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Normalize JSON Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f35f92ef-96f9-4c02-9e40-8e580e4dc901",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e901acb807f6f1eb84add1628862abce2439962dc055c79b585eb9f923890bb7"
+  },
+  "id": "vNQ4T6pQS1MQRlP6",
+  "tags": []
+}
