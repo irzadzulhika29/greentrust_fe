@@ -24,9 +24,8 @@ const InvestorProfilePreviewCard = ({ identityValues, careerValues }) => {
     <div className="overflow-hidden rounded-[24px] border border-[#d8d3ca] bg-white shadow-[0_18px_38px_rgba(20,23,18,0.05)]">
       <div className="flex items-center justify-between bg-[#1f3442] px-5 py-3 text-white">
         <div className="text-[0.63rem] font-semibold uppercase tracking-[0.22em]">
-          Kartu profil investor
         </div>
-        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em]">
+        <span className="px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em]">
           {tone.badge}
         </span>
       </div>
@@ -75,7 +74,11 @@ const InvestorProfilePreviewCard = ({ identityValues, careerValues }) => {
               Fokus
             </div>
             <div className="mt-1 text-[0.82rem] font-semibold text-[#171717]">
-              {careerValues.sectorFocus || '12 UMKM'}
+              {Array.isArray(careerValues.sectorFocus)
+              ? careerValues.sectorFocus.length
+                ? `${careerValues.sectorFocus.length} sektor`
+                : '—'
+              : careerValues.sectorFocus || '—'}
             </div>
           </div>
           <div>
