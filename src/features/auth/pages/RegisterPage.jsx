@@ -5,6 +5,7 @@ import AuthModeSwitch from '@/features/auth/components/AuthModeSwitch'
 import { StepListPreview } from '@/features/auth/components/AuthPreviewCards'
 import AuthShell from '@/features/auth/components/AuthShell'
 import RegisterForm from '@/features/auth/components/RegisterForm'
+import { apiFetch } from '@/lib/utils'
 import { useState } from 'react'
 
 const onboardingSteps = [
@@ -64,13 +65,14 @@ const RegisterPage = () => {
 
     setSubmitting(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
           confirm_password: formData.confirm_password,
+          role: 'umkm',
         }),
       })
 
@@ -81,7 +83,7 @@ const RegisterPage = () => {
       }
 
       if (json?.data?.session_token) {
-        sessionStorage.setItem('session_token', json.data.session_token)
+        localStorage.setItem('reg_session_token', json.data.session_token)
       }
 
       setShowOtp(true)
@@ -95,10 +97,10 @@ const RegisterPage = () => {
   const handleOtpComplete = async (code) => {
     setOtpError(null)
     setOtpVerifying(true)
-    const token = sessionStorage.getItem('session_token')
+    const token = localStorage.getItem('reg_session_token')
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_API}/auth/verify-otp`, {
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +116,7 @@ const RegisterPage = () => {
       }
 
       if (json?.data?.session_token) {
-        sessionStorage.setItem('session_token', json.data.session_token)
+        localStorage.setItem('reg_session_token', json.data.session_token)
       }
 
       navigate('/onboarding')

@@ -4,10 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   BarChart3,
   Box,
-  Circle,
   Diamond,
-  FileArchive,
-  History,
   Menu,
   MoreHorizontal,
   Send,
@@ -20,9 +17,6 @@ const navItems = [
   { label: 'Evidence Vault', icon: Box, href: '/umkm/evidence' },
   { label: 'Green Passport', icon: Diamond, href: '/umkm/passport' },
   { label: 'Proposal', icon: Send, href: '/umkm/proposal', badge: '1' },
-  { label: 'Profil Bisnis', icon: Circle, href: '/umkm/profile' },
-  { label: 'Katalog Produk', icon: FileArchive },
-  { label: 'Aktivitas & Audit', icon: History },
 ]
 
 const Brand = () => (

@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Ellipsis, Info, Loader2, Plus, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Info, Loader2, Plus, X } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import {
   categories,
   findEvidenceIndicatorBySlug,
   getIndicatorHref,
 } from '@/features/umkm/data/evidenceVaultData'
+import { apiFetch } from '@/lib/utils'
 
 const N8N_URL = import.meta.env.VITE_N8N_URL
 const BASE_API = import.meta.env.VITE_BASE_API
-
-const statusClasses = {
-  'on-chain': 'bg-[#dcebdc] text-[#4f8b5e]',
-  review: 'bg-[#fbefd7] text-[#c9853e]',
-}
 
 const formatBytes = (bytes) => {
   if (bytes < 1024) return `${bytes} B`
@@ -26,15 +22,12 @@ const getFileExt = (name) => name.split('.').pop().toUpperCase().slice(0, 4)
 const ACCEPTED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
 const MAX_BYTES = 10 * 1024 * 1024
 
-const UploadDocumentModal = ({ indicator, onClose }) => {
+const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClose }) => {
   const fileInputRef = useRef(null)
   const [files, setFiles] = useState([])
   const [isDragging, setIsDragging] = useState(false)
   const [submitState, setSubmitState] = useState('idle') // idle | loading | success | error
   const [errorMsg, setErrorMsg] = useState('')
-  const [categories, setCategories] = useState([])
-  const [selectedRequirementId, setSelectedRequirementId] = useState('')
-  const [loadingCategories, setLoadingCategories] = useState(true)
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -53,39 +46,6 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [onClose])
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true)
-        const res = await fetch(`${BASE_API}/evidence/categories`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!res.ok) {
-          throw new Error('Gagal memuat kategori evidence')
-        }
-
-        const json = await res.json()
-        setCategories(json.data || [])
-
-        // Auto-select first requirement if available
-        if (json.data && json.data.length > 0 && json.data[0].requirements?.length > 0) {
-          setSelectedRequirementId(json.data[0].requirements[0].requirement_id)
-        }
-      } catch (err) {
-        console.error('Error fetching categories:', err)
-        setErrorMsg(err.message || 'Gagal memuat kategori evidence')
-      } finally {
-        setLoadingCategories(false)
-      }
-    }
-
-    fetchCategories()
-  }, [])
 
   const addFiles = useCallback((incoming) => {
     const valid = Array.from(incoming).filter((f) => {
@@ -123,23 +83,20 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
 
   const handleSubmit = async () => {
     if (files.length === 0) return
-    if (!selectedRequirementId) {
-      setErrorMsg('Pilih kategori evidence terlebih dahulu')
-      return
-    }
 
     setSubmitState('loading')
     setErrorMsg('')
 
     try {
-      // Send each file as a separate request, all in parallel
+      const token = localStorage.getItem('auth_token') ?? ''
       const requests = files.map((file) => {
         const formData = new FormData()
         formData.append('document', file)
-        formData.append('requirement_id', selectedRequirementId)
+        formData.append('requirement_id', requirementId)
 
-        return fetch(`${N8N_URL}/evidence-docs`, {
+        return apiFetch(`${N8N_URL}/evidence-docs`, {
           method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         })
       })
@@ -224,43 +181,10 @@ const UploadDocumentModal = ({ indicator, onClose }) => {
             aria-label="Pilih file"
           />
 
-          {/* Category & Requirement Selector */}
-          {loadingCategories ? (
-            <div className="flex items-center justify-center gap-2 rounded-[18px] border border-[#ddd6ca] bg-[#fbfaf7] px-4 py-4 text-[0.88rem] font-semibold text-[#8a857d]">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Memuat kategori...
-            </div>
-          ) : categories.length > 0 ? (
-            <div className="space-y-2">
-              <label htmlFor="requirement-select" className="block text-[0.88rem] font-bold text-[#20201c]">
-                Pilih Kategori Evidence
-              </label>
-              <div className="relative">
-                <select
-                  id="requirement-select"
-                  value={selectedRequirementId}
-                  onChange={(e) => setSelectedRequirementId(e.target.value)}
-                  className="w-full appearance-none rounded-[16px] border border-[#ddd6ca] bg-white px-4 py-3 pr-10 text-[0.95rem] font-semibold text-[#20201c] transition hover:border-[#236041] focus:border-[#236041] focus:outline-none focus:ring-2 focus:ring-[#236041]/20"
-                >
-                  {categories.map((category) =>
-                    category.requirements?.map((req) => (
-                      <option key={req.requirement_id} value={req.requirement_id}>
-                        [{category.code}] {req.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a857d]" />
-              </div>
-              {selectedRequirementId && (
-                <div className="rounded-[14px] bg-[#eef6f0] px-3 py-2 text-[0.82rem] font-normal leading-5 text-[#2d6644]">
-                  {categories
-                    .flatMap((c) => c.requirements || [])
-                    .find((r) => r.requirement_id === selectedRequirementId)?.description}
-                </div>
-              )}
-            </div>
-          ) : null}
+          {/* Requirement info */}
+          <div className="rounded-[14px] bg-[#eef6f0] px-3 py-2 text-[0.82rem] font-semibold leading-5 text-[#2d6644]">
+            Dokumen untuk: <span className="font-bold">{requirementName}</span>
+          </div>
 
           {/* File list */}
           {files.length > 0 && (
@@ -384,6 +308,23 @@ const EvidenceIndicatorDetailPage = () => {
   const { indicatorCode } = useParams()
   const indicator = findEvidenceIndicatorBySlug(indicatorCode)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [selectedRequirement, setSelectedRequirement] = useState(null)
+  const [categoryDetail, setCategoryDetail] = useState(null)
+  const [loadingDetail, setLoadingDetail] = useState(true)
+
+  useEffect(() => {
+    if (!indicator) return
+    const token = localStorage.getItem('auth_token') ?? ''
+    apiFetch(`${BASE_API}/evidence/categories/${indicator.code}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) setCategoryDetail(json.data)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingDetail(false))
+  }, [indicator])
 
   if (!indicator) {
     return <Navigate to="/umkm/evidence" replace />
@@ -420,15 +361,6 @@ const EvidenceIndicatorDetailPage = () => {
                 {indicator.summary}
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsUploadModalOpen(true)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[#20201c] bg-[#20201c] px-5 text-xs font-bold text-white transition hover:bg-[#11110f]"
-            >
-              <Plus className="h-4 w-4" />
-              Tambah Dokumen
-            </button>
           </div>
         </div>
       </header>
@@ -442,53 +374,64 @@ const EvidenceIndicatorDetailPage = () => {
                   Daftar Dokumen Yang Dibutuhkan
                 </div>
                 <div className="mt-2 text-[1.95rem] leading-none tracking-[-0.05em] text-[#181816]">
-                  {indicator.current} dari {indicator.total} terpenuhi
+                  {loadingDetail ? '—' : `${categoryDetail?.category?.fulfilled_count ?? 0} dari ${categoryDetail?.category?.required_count ?? 0} terpenuhi`}
                 </div>
               </div>
 
               <div
-                className="grid h-[68px] w-[68px] place-items-center rounded-full border-[6px] bg-white text-[1.75rem] font-bold"
+                className="grid h-[81px] w-[81px] place-items-center rounded-full border-[6px] bg-white text-lg font-bold"
                 style={{ borderColor: indicator.color, color: '#181816' }}
               >
-                {indicator.score}
+                {loadingDetail ? '—' : (categoryDetail?.category?.score ?? 0)}
               </div>
             </div>
 
             <div className="space-y-1">
-              {indicator.requiredDocs.map((doc) => (
-                <div
-                  key={doc.title}
-                  className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div
-                      className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${
-                        doc.completed ? 'bg-[#236041] text-white' : 'bg-[#f4f1ea] text-[#8d877f]'
-                      }`}
-                    >
-                      {doc.completed ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[1rem] font-bold leading-tight text-[#20201c]">{doc.title}</div>
-                      <div className="mt-1 text-[0.9rem] font-normal text-[#8a857d]">{doc.fileName}</div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!doc.completed) {
-                        setIsUploadModalOpen(true)
-                      }
-                    }}
-                    className="inline-flex shrink-0 items-center gap-2 text-[0.95rem] font-bold transition"
-                    style={{ color: indicator.color }}
-                  >
-                    {doc.completed ? 'Lihat' : 'Unggah'}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+              {loadingDetail ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-[0.88rem] text-[#8d877f]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Memuat...
                 </div>
-              ))}
+              ) : (categoryDetail?.requirements ?? []).map((req) => {
+                const fulfilled = (categoryDetail?.documents ?? []).some(
+                  (d) => d.requirement_id === req.requirement_id && d.status !== 'rejected'
+                )
+                return (
+                  <div
+                    key={req.requirement_id}
+                    className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${
+                          fulfilled ? 'bg-[#236041] text-white' : 'bg-[#f4f1ea] text-[#8d877f]'
+                        }`}
+                      >
+                        {fulfilled ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[1rem] font-bold leading-tight text-[#20201c]">{req.name}</div>
+                        <div className="mt-1 text-[0.9rem] font-normal text-[#8a857d]">{req.description}</div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!fulfilled) {
+                          setSelectedRequirement({ id: req.requirement_id, name: req.name })
+                          setIsUploadModalOpen(true)
+                        }
+                      }}
+                      className="inline-flex shrink-0 items-center gap-2 text-[0.95rem] font-bold transition"
+                      style={{ color: indicator.color }}
+                    >
+                      {fulfilled ? 'Lihat' : 'Unggah'}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           </section>
 
@@ -529,66 +472,7 @@ const EvidenceIndicatorDetailPage = () => {
                 </div>
               ))}
             </div>
-          </section>
-
-          <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-              <div className="text-[0.68rem] font-semibold uppercase text-[#8d877f]">
-                Dokumen Terunggah • {indicator.uploadedDocs.length} File
-              </div>
-
-              <div className="flex items-center gap-2 text-[0.86rem] font-semibold text-[#7d7870]">
-                <span>Filter:</span>
-                <button
-                  type="button"
-                  className="rounded-full border border-[#ddd6ca] bg-[#fbfaf7] px-3 py-1 text-[0.8rem] font-bold text-[#5f5a53]"
-                >
-                  Semua
-                </button>
-                <button
-                  type="button"
-                  className="rounded-full border border-[#c8dfca] bg-[#dcebdc] px-3 py-1 text-[0.8rem] font-bold text-[#4f8b5e]"
-                >
-                  on-chain
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              {indicator.uploadedDocs.map((doc) => (
-                <div
-                  key={doc.name}
-                  className="flex items-start justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
-                >
-                  <div className="flex min-w-0 items-start gap-4">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#e7e1d8] bg-[#fbfaf7] text-[0.72rem] font-bold text-[#8a857d]">
-                      {doc.type}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-[1rem] font-bold leading-tight text-[#20201c]">{doc.name}</div>
-                      <div className="mt-1 text-[0.86rem] font-normal text-[#8a857d]">{doc.meta}</div>
-                      {doc.warning ? (
-                        <div className="mt-2 text-[0.82rem] font-bold text-[#c9853e]">{doc.warning}</div>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-3">
-                    <div
-                      className={`rounded-full px-3 py-1 text-[0.8rem] font-bold ${
-                        statusClasses[doc.status]
-                      }`}
-                    >
-                      {doc.status === 'on-chain' ? 'on-chain' : 'perlu review'}
-                    </div>
-                    <button type="button" className="text-[#8a857d] transition hover:text-[#20201c]">
-                      <Ellipsis className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          </section>  
 
           <div className="space-y-6">
             <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
@@ -624,21 +508,17 @@ const EvidenceIndicatorDetailPage = () => {
                 ))}
               </div>
             </section>
-
-            <section className="rounded-[18px] border border-dashed border-[#ddd6ca] bg-[#fffdf9] p-6">
-              <div className="text-[1rem] font-bold text-[#20201c]">Contoh dokumen yang diterima AI:</div>
-              <ul className="mt-3 space-y-2 pl-5 text-[0.96rem] font-normal leading-6 text-[#5f5a53]">
-                {indicator.acceptedExamples.map((example) => (
-                  <li key={example}>{example}</li>
-                ))}
-              </ul>
-            </section>
           </div>
         </div>
       </main>
 
-      {isUploadModalOpen ? (
-        <UploadDocumentModal indicator={indicator} onClose={() => setIsUploadModalOpen(false)} />
+      {isUploadModalOpen && selectedRequirement ? (
+        <UploadDocumentModal
+          indicator={indicator}
+          requirementId={selectedRequirement.id}
+          requirementName={selectedRequirement.name}
+          onClose={() => { setIsUploadModalOpen(false); setSelectedRequirement(null) }}
+        />
       ) : null}
     </div>
   )

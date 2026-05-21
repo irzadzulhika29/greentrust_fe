@@ -2,6 +2,9 @@ import React from 'react'
 import { Download, FileText, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PressButton from '@/components/ui/PressButton'
+import { apiFetch } from '@/lib/utils'
+
+const BASE_API = import.meta.env.VITE_BASE_API
 
 const REJECT_REASONS = [
   'Tidak butuh saat ini',
@@ -129,91 +132,85 @@ function RejectModal({ proposal, onClose, onSubmit }) {
   )
 }
 
-const TABS = [
-  { key: 'incoming', label: 'Masuk', count: 3 },
-  { key: 'sent', label: 'Terkirim', count: 2 },
-  { key: 'approved', label: 'Disetujui', count: 1 },
-  { key: 'rejected', label: 'Ditolak', count: 2 },
-  { key: 'all', label: 'Semua', count: 8 },
-]
-
-const STATUS_STYLES = {
-  'Menunggu Anda': 'bg-[#fff4d6] text-[#c47739]',
-  'Sedang Ditinjau': 'bg-[#fff4d6] text-[#c47739]',
-  'Disetujui': 'bg-[#e8f0eb] text-[#205336]',
-  'Ditolak': 'bg-[#fde8e3] text-[#934f42]',
+const TAB_PARAMS = {
+  incoming: { box: 'inbox', status: 'sent' },
+  sent:     { box: 'sent' },
+  approved: { box: 'inbox', status: 'accepted' },
+  rejected: { box: 'inbox', status: 'rejected' },
+  all:      {},
 }
+
+const TABS = [
+  { key: 'incoming', label: 'Masuk' },
+  { key: 'sent', label: 'Terkirim' },
+  { key: 'approved', label: 'Disetujui' },
+  { key: 'rejected', label: 'Ditolak' },
+  { key: 'all', label: 'Semua' },
+]
 
 const TYPE_STYLES = {
-  'Pendanaan': 'bg-[#eaf2fb] text-[#336699]',
-  'Pengadaan': 'bg-[#fff0e3] text-[#c57f44]',
-  'Hibah': 'bg-[#f1ebfb] text-[#7b65a9]',
-  'Pinjaman': 'bg-[#eaf6ee] text-[#205336]',
+  funding:    'bg-[#eaf2fb] text-[#336699]',
+  procurement:'bg-[#fff0e3] text-[#c57f44]',
+  grant:      'bg-[#f1ebfb] text-[#7b65a9]',
+  loan:       'bg-[#eaf6ee] text-[#205336]',
 }
 
-const INVESTOR_COLORS = {
-  'AP': '#28557c',
-  'MH': '#c27a3b',
-  'FA': '#215f3b',
-  'SK': '#c57f44',
+const STATUS_STYLES = {
+  sent:      'bg-[#fff4d6] text-[#c47739]',
+  draft:     'bg-[#f4f3ec] text-[#5f5a53]',
+  accepted:  'bg-[#e8f0eb] text-[#205336]',
+  rejected:  'bg-[#fde8e3] text-[#934f42]',
+  withdrawn: 'bg-[#f4f3ec] text-[#5f5a53]',
 }
 
-const proposals = [
-  {
-    id: 1,
-    from: 'Arnold Prasetyo',
-    fromInitials: 'AP',
-    type: 'Pendanaan',
-    ref: 'PRP-2026-1042',
-    date: '21 Mei 2026',
-    time: '14:02',
-    title: 'Pendanaan Modal Kerja Ekspansi Produksi',
-    body: 'Halo Bu Siti, kami tertarik mendanai ekspansi workshop pewarnaan alam Anda. Lihat detail dalam lampiran. Terbuka untuk diskusi via WA / video call minggu depan.',
-    file: { name: 'proposal-modal-kerja-ekspansi.pdf', size: '2.1 MB' },
-    nilai: 'Rp 350.000.000',
-    tenor: '24 bln tenor',
-    terms: 'Bagi hasil 8%/thn',
-    status: 'Menunggu Anda',
-  },
-  {
-    id: 2,
-    from: 'Mira Handayani',
-    fromInitials: 'MH',
-    type: 'Pengadaan',
-    ref: 'PRP-2026-1038',
-    date: '20 Mei 2026',
-    time: '16:40',
-    title: 'Kontrak Pembelian 800 Lembar Batik / Triwulan',
-    body: 'Kainusa Group ingin menambah Batik Siti ke rantai supplier kami untuk lini Heritage. Kontrak awal 12 bulan, ekstensi otomatis. Lihat draft kontrak.',
-    file: { name: 'kontrak-supply-kainusa.pdf', size: '1.6 MB' },
-    nilai: 'Rp 480.000.000',
-    tenor: '12 bln tenor',
-    terms: 'PO triwulan + DP 30%',
-    status: 'Sedang Ditinjau',
-  },
-  {
-    id: 3,
-    from: 'Farhan Al-Hakim',
-    fromInitials: 'FA',
-    type: 'Pinjaman',
-    ref: 'PRP-2026-1029',
-    date: '17 Mei 2026',
-    time: '10:22',
-    title: 'Pinjaman Hijau Modal Ekspansi Alat Produksi',
-    body: 'KSP Hijau Nusantara menawarkan pinjaman hijau dengan bunga rendah untuk pembelian alat produksi ramah lingkungan. Tenor fleksibel 12–36 bulan.',
-    file: { name: 'penawaran-pinjaman-hijau.pdf', size: '1.1 MB' },
-    nilai: 'Rp 220.000.000',
-    tenor: '24 bln tenor',
-    terms: 'Bunga 0.8%/bln',
-    status: 'Menunggu Anda',
-  },
-]
+const STATUS_LABEL = {
+  sent:      'Menunggu',
+  draft:     'Draft',
+  accepted:  'Disetujui',
+  rejected:  'Ditolak',
+  withdrawn: 'Ditarik',
+}
+
+const formatRupiah = (amount) =>
+  amount ? `Rp ${Number(amount).toLocaleString('id-ID')}` : '—'
+
+const formatBytes = (bytes) => {
+  if (!bytes) return ''
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 const UmkmProposalPage = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = React.useState('incoming')
   const [sort, setSort] = React.useState('newest')
   const [rejectModal, setRejectModal] = React.useState(null)
+  const [proposals, setProposals] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  const [fetchError, setFetchError] = React.useState(null)
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token') ?? ''
+    const params = TAB_PARAMS[activeTab] ?? {}
+    const query = new URLSearchParams(params).toString()
+    const url = `${BASE_API}/proposals${query ? `?${query}` : ''}`
+
+    apiFetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.status?.isSuccess) {
+          setProposals(json.data ?? [])
+          setFetchError(null)
+        } else {
+          throw new Error(json?.message ?? 'Gagal memuat proposal')
+        }
+      })
+      .catch((err) => {
+        setFetchError(err.message)
+        setProposals([])
+      })
+      .finally(() => setLoading(false))
+  }, [activeTab])
 
   return (
     <div className="px-8 py-8">
@@ -307,77 +304,89 @@ const UmkmProposalPage = () => {
 
       {/* Proposal list */}
       <div className="flex flex-col gap-4">
-        {proposals.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-[#e5e4e0] bg-white shadow-[0_4px_12px_rgba(17,17,17,0.04)]">
-            {/* Card header */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-2">
-              <div className="flex items-center gap-3">
-                <div
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-xs font-bold text-white"
-                  style={{ backgroundColor: INVESTOR_COLORS[p.fromInitials] ?? '#205336' }}
-                >
-                  {p.fromInitials}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-[#5f5a53]">
-                  <FileText className="h-4 w-4 text-[#205336]" />
-                  <span>Diterima dari</span>
-                  <span className="font-semibold text-[#111111]">{p.from}</span>
-                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${TYPE_STYLES[p.type] ?? 'bg-[#f4f3ec] text-[#5f5a53]'}`}>
-                    {p.type}
-                  </span>
-                </div>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-[#f4f3ec] text-[#5f5a53]'}`}>
-                ● {p.status}
-              </span>
-            </div>
-            <div className="px-6 pb-1 text-[10px] text-[#8d877f]">
-              {p.ref} · {p.date} · {p.time}
-            </div>
+        {loading ? (
+          <div className="py-12 text-center text-sm text-[#8d877f]">Memuat proposal...</div>
+        ) : fetchError ? (
+          <div className="py-12 text-center text-sm text-red-600">{fetchError}</div>
+        ) : proposals.length === 0 ? (
+          <div className="py-12 text-center text-sm text-[#8d877f]">Tidak ada proposal di tab ini.</div>
+        ) : proposals.map((p) => {
+          const counterparty = p.counterparty ?? {}
+          const initials = (counterparty.name ?? '?').slice(0, 2).toUpperCase()
+          const sentDate = p.sent_at ? new Date(p.sent_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+          const sentTime = p.sent_at ? new Date(p.sent_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''
+          const firstAttachment = p.attachments?.[0]
 
-            {/* Card body */}
-            <div className="grid gap-6 px-6 pb-6 pt-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-              <div>
-                <h3 className="text-xl font-semibold text-[#111111] mb-2">{p.title}</h3>
-                <p className="text-sm text-[#5f5a53] leading-relaxed mb-4">{p.body}</p>
-                {/* File attachment */}
-                <div className="flex items-center gap-3 rounded-xl border border-[#e5e4e0] bg-[#f4f3ec] px-4 py-3 w-fit">
-                  <div className="text-[10px] font-bold uppercase text-[#5f5a53] bg-white border border-[#e5e4e0] rounded px-1.5 py-0.5">PDF</div>
-                  <div>
-                    <div className="text-sm font-semibold text-[#111111]">{p.file.name}</div>
-                    <div className="text-xs text-[#5f5a53]">{p.file.size}</div>
+          return (
+            <div key={p.proposal_id} className="rounded-2xl border border-[#e5e4e0] bg-white shadow-[0_4px_12px_rgba(17,17,17,0.04)]">
+              {/* Card header */}
+              <div className="flex items-center justify-between px-6 pt-5 pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-xs font-bold text-white bg-[#28557c]">
+                    {initials}
                   </div>
-                  <PressButton variant="primary" className="!flex !items-center !gap-1.5 !px-3 !py-1.5 !text-xs ml-2">
-                    <Download className="h-3 w-3" />
-                    Unduh
-                  </PressButton>
+                  <div className="flex items-center gap-2 text-sm text-[#5f5a53]">
+                    <FileText className="h-4 w-4 text-[#205336]" />
+                    <span>{p.sender_role === 'umkm' ? 'Dikirim ke' : 'Diterima dari'}</span>
+                    <span className="font-semibold text-[#111111]">{counterparty.name ?? '—'}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${TYPE_STYLES[p.proposal_type] ?? 'bg-[#f4f3ec] text-[#5f5a53]'}`}>
+                      {p.proposal_type}
+                    </span>
+                  </div>
                 </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-[#f4f3ec] text-[#5f5a53]'}`}>
+                  ● {STATUS_LABEL[p.status] ?? p.status}
+                </span>
+              </div>
+              <div className="px-6 pb-1 text-[10px] text-[#8d877f]">
+                {p.proposal_id.slice(0, 8).toUpperCase()} · {sentDate} · {sentTime}
               </div>
 
-              {/* Right: nilai + actions */}
-              <div className="flex flex-col gap-3">
-                <div className="rounded-xl border border-[#e5e4e0] bg-[#f4f3ec] p-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-[#8d877f] mb-2">Nilai</div>
-                  <div className="text-2xl font-semibold text-[#111111]">{p.nilai}</div>
-                  <div className="mt-1 text-xs text-[#5f5a53]">{p.tenor} &nbsp; {p.terms}</div>
+              {/* Card body */}
+              <div className="grid gap-6 px-6 pb-6 pt-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                <div>
+                  <h3 className="text-xl font-semibold text-[#111111] mb-2">{p.title}</h3>
+                  <p className="text-sm text-[#5f5a53] leading-relaxed mb-4">{p.message}</p>
+                  {firstAttachment && (
+                    <div className="flex items-center gap-3 rounded-xl border border-[#e5e4e0] bg-[#f4f3ec] px-4 py-3 w-fit">
+                      <div className="text-[10px] font-bold uppercase text-[#5f5a53] bg-white border border-[#e5e4e0] rounded px-1.5 py-0.5">
+                        {firstAttachment.mime_type === 'application/pdf' ? 'PDF' : 'FILE'}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-[#111111]">{firstAttachment.original_name}</div>
+                        <div className="text-xs text-[#5f5a53]">{formatBytes(firstAttachment.file_size)}</div>
+                      </div>
+                      <a href={firstAttachment.file_path} target="_blank" rel="noopener noreferrer">
+                        <PressButton variant="primary" className="!flex !items-center !gap-1.5 !px-3 !py-1.5 !text-xs ml-2">
+                          <Download className="h-3 w-3" />
+                          Unduh
+                        </PressButton>
+                      </a>
+                    </div>
+                  )}
                 </div>
-                {p.status === 'Menunggu Anda' && (
-                  <div className="grid grid-cols-3 gap-2">
-                    <PressButton variant="ghost" className="w-full !justify-center !text-xs">Tinjau</PressButton>
-                    <PressButton variant="danger" className="w-full !justify-center !text-xs" onClick={() => setRejectModal(p)}>× Tolak</PressButton>
-                    <PressButton variant="primary" className="w-full !justify-center !text-xs">✓ Setujui</PressButton>
+
+                {/* Right: nilai + actions */}
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-xl border border-[#e5e4e0] bg-[#f4f3ec] p-4">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-[#8d877f] mb-2">Nilai</div>
+                    <div className="text-2xl font-semibold text-[#111111]">{formatRupiah(p.amount)}</div>
+                    <div className="mt-1 text-xs text-[#5f5a53]">
+                      {p.tenor_months ? `${p.tenor_months} bln tenor` : ''}
+                      {p.scheme ? ` · ${p.scheme}` : ''}
+                    </div>
                   </div>
-                )}
-                {p.status === 'Sedang Ditinjau' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <PressButton variant="danger" className="w-full !justify-center !text-xs" onClick={() => setRejectModal(p)}>× Tolak</PressButton>
-                    <PressButton variant="primary" className="w-full !justify-center !text-xs">✓ Setujui</PressButton>
-                  </div>
-                )}
+                  {p.status === 'sent' && p.receiver_role === 'umkm' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <PressButton variant="danger" className="w-full !justify-center !text-xs" onClick={() => setRejectModal({ ...p, fromInitials: initials, from: counterparty.name, ref: p.proposal_id.slice(0, 8).toUpperCase(), nilai: formatRupiah(p.amount) })}>× Tolak</PressButton>
+                      <PressButton variant="primary" className="w-full !justify-center !text-xs">✓ Setujui</PressButton>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

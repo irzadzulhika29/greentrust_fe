@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Clock, Star, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { categories as dummyCategories, getIndicatorHref } from '@/features/umkm/data/evidenceVaultData'
+import { getIndicatorHref } from '@/features/umkm/data/evidenceVaultData'
+import { apiFetch } from '@/lib/utils'
 
 const CATEGORY_META = {
   BB: { color: '#7a5521', tint: '#fbefd7', slug: 'bb' },
@@ -22,24 +23,6 @@ const normaliseApiCategory = (cat) => ({
   score: cat.score,
   status: cat.status,
 })
-
-// Normalise dummy category shape → internal shape
-const normaliseDummyCategory = (cat) => ({
-  code: cat.code,
-  name: cat.name,
-  weight: cat.weight,
-  fulfilled_count: cat.current,
-  required_count: cat.total,
-  score: 0,
-  status: cat.status,
-})
-
-const DUMMY_SUMMARY = {
-  grs_score: 87,
-  passport_threshold: 70,
-  passport_status: 'draft',
-  categories: dummyCategories.map(normaliseDummyCategory),
-}
 
 const getStatus = (fulfilled, required) => {
   if (fulfilled === 0) return 'Kosong'
@@ -111,20 +94,16 @@ const EvidenceCategoryCard = ({ category }) => {
 const EvidenceVaultPage = () => {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const token = localStorage.getItem('token') ?? ''
-        const res = await fetch(`${import.meta.env.VITE_BASE_API}/evidence/summary`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true',
-          },
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const json = await res.json()
-        if (json.status?.isSuccess && json.data?.categories?.length > 0) {
+    const token = localStorage.getItem('auth_token') ?? ''
+    apiFetch(`${import.meta.env.VITE_BASE_API}/evidence/summary`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.status?.isSuccess && json.data) {
           setSummary({
             grs_score: json.data.grs_score,
             passport_threshold: json.data.passport_threshold,
@@ -132,15 +111,11 @@ const EvidenceVaultPage = () => {
             categories: json.data.categories.map(normaliseApiCategory),
           })
         } else {
-          setSummary(DUMMY_SUMMARY)
+          throw new Error(json?.message ?? 'Gagal memuat data')
         }
-      } catch {
-        setSummary(DUMMY_SUMMARY)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchSummary()
+      })
+      .catch((err) => setFetchError(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
   const grs = summary?.grs_score ?? 0
@@ -172,6 +147,8 @@ const EvidenceVaultPage = () => {
               <Loader2 className="h-5 w-5 animate-spin" />
               <span className="text-sm">Memuat data GRS...</span>
             </div>
+          ) : fetchError ? (
+            <div className="py-8 text-center text-sm text-red-600">{fetchError}</div>
           ) : (
             <div className="grid gap-6 xl:grid-cols-[150px_minmax(0,1fr)_140px] xl:items-center">
               <div className="relative grid h-[126px] w-[126px] place-items-center rounded-full">

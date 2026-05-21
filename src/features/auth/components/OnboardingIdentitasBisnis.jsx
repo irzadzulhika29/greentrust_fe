@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Camera, Lock, Upload } from 'lucide-react'
+import { apiFetch } from '@/lib/utils'
 
 const initialFields = {
   businessName: '',
@@ -40,13 +41,27 @@ const labelClass =
  */
 const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
   const [fields, setFields] = useState(initialFields)
+  const [photoFiles, setPhotoFiles] = useState([])
   const [photoPreview, setPhotoPreview] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [sectors, setSectors] = useState([])
   const photoInputRef = useRef(null)
 
+  useEffect(() => {
+    apiFetch(`${import.meta.env.VITE_BASE_API}/sectors`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) setSectors(json.data)
+      })
+      .catch(() => {})
+  }, [])
+
   const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setPhotoPreview(URL.createObjectURL(file))
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    setPhotoFiles(files)
+    setPhotoPreview(URL.createObjectURL(files[0]))
   }
 
   const completion = useMemo(() => {
@@ -57,7 +72,12 @@ const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
   const missingCount = requiredFields.length - requiredFields.filter((key) => fields[key]?.toString().trim()).length
   const descriptionLength = fields.businessDescription.trim().length
   const previewName = fields.businessName.trim() || 'Nama usaha'
-  const previewCategory = fields.businessCategory.trim() || 'Kategori bisnis'
+  const previewCategory = useMemo(() => {
+    if (!fields.businessCategory) return 'Kategori bisnis'
+    const found = sectors.find((s) => s.sector_id === fields.businessCategory)
+    if (!found) return 'Kategori bisnis'
+    return found.sector_name.charAt(0).toUpperCase() + found.sector_name.slice(1)
+  }, [fields.businessCategory, sectors])
   const previewCity = fields.businessCity.trim() || 'Lokasi'
   const previewProvince = fields.businessProvince.trim() || ''
   const previewAddress = fields.businessAddress.trim() || ''
@@ -67,6 +87,42 @@ const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
 
   const handleChange = (name, value) =>
     setFields((cur) => ({ ...cur, [name]: value }))
+
+  const handleConfirm = async () => {
+    setSubmitError(null)
+    setSubmitting(true)
+    const token = localStorage.getItem('reg_session_token')
+    try {
+      const body = new FormData()
+      body.append('business_name', fields.businessName)
+      body.append('sector_id', fields.businessCategory)
+      body.append('business_description', fields.businessDescription)
+      body.append('is_service_business', fields.isServiceBusiness ? 'true' : 'false')
+      body.append('business_address_line', fields.businessAddress)
+      body.append('business_province', fields.businessProvince)
+      body.append('business_city', fields.businessCity)
+      body.append('whatsapp_number', fields.whatsappNumber)
+      photoFiles.forEach((file) => body.append('photos', file))
+
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/onboarding/business-profile`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token ?? '' },
+        body,
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`)
+      }
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+      onNext({ ...fields, profileId: json?.data?.profile_id, photoUrls: json?.data?.photo_urls })
+    } catch (err) {
+      setSubmitError(err.message ?? 'Gagal menyimpan profil bisnis. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -111,13 +167,19 @@ const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
                   <label className={labelClass} htmlFor="businessCategory">
                     Kategori Bisnis
                   </label>
-                  <input
+                  <select
                     id="businessCategory"
                     className={inputClass}
                     onChange={(e) => handleChange('businessCategory', e.target.value)}
-                    placeholder="Tekstil & Batik"
                     value={fields.businessCategory}
-                  />
+                  >
+                    <option value="">Pilih sektor...</option>
+                    {sectors.map((s) => (
+                      <option key={s.sector_id} value={s.sector_id}>
+                        {s.sector_name.charAt(0).toUpperCase() + s.sector_name.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -166,6 +228,7 @@ const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
                   ref={photoInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  multiple
                   className="hidden"
                   onChange={handlePhotoChange}
                 />
@@ -301,25 +364,44 @@ const OnboardingIdentitasBisnis = ({ onNext, onBack }) => {
       </div>
 
       <div className=" mt-5 flex flex-none flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="text-[0.88rem] font-medium text-[#8b867e]">
-          Progress profil: <span className="font-bold text-[#20201c]">{completion} / 100</span>
-          <span> - {missingCount} field tersisa</span>
+        <div className="flex flex-col gap-1">
+          <div className="text-[0.88rem] font-medium text-[#8b867e]">
+            Progress profil: <span className="font-bold text-[#20201c]">{completion} / 100</span>
+            <span> - {missingCount} field tersisa</span>
+          </div>
+          {submitError && (
+            <p className="text-[0.75rem] text-red-600">{submitError}</p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex h-12 items-center rounded-xl border border-[#d8d3ca] bg-[#fbfaf7] px-6 text-[0.92rem] font-bold text-[#20201c] transition hover:border-[#cfc6b8] hover:bg-white"
+            disabled={submitting}
+            className="inline-flex h-12 items-center rounded-xl border border-[#d8d3ca] bg-[#fbfaf7] px-6 text-[0.92rem] font-bold text-[#20201c] transition hover:border-[#cfc6b8] hover:bg-white disabled:opacity-50"
           >
             Kembali
           </button>
           <button
             type="button"
-            onClick={() => onNext(fields)}
-            className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#111411] px-6 text-[0.92rem] font-bold text-white shadow-[0_18px_35px_rgba(17,20,17,0.16)] transition hover:-translate-y-0.5 hover:bg-[#181d18]"
+            onClick={handleConfirm}
+            disabled={submitting || completion < 100}
+            className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#111411] px-6 text-[0.92rem] font-bold text-white shadow-[0_18px_35px_rgba(17,20,17,0.16)] transition hover:-translate-y-0.5 hover:bg-[#181d18] disabled:opacity-60"
           >
-            Lanjut ke Evidence Vault
-            <ArrowRight className="h-4 w-4" />
+            {submitting ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                Lanjut ke Evidence Vault
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

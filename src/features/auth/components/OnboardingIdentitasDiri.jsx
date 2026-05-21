@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Lock, Upload } from 'lucide-react'
+import { apiFetch } from '@/lib/utils'
 
 const initialFields = {
   firstName: '',
@@ -19,7 +20,7 @@ const fieldMeta = [
   { name: 'lastName', label: 'Nama Belakang', auto: true, half: true },
   { name: 'nik', label: 'NIK (16 Digit)', auto: true, full: true, encrypted: true },
   { name: 'birthPlace', label: 'Tempat Lahir', auto: true, half: true },
-  { name: 'birthDate', label: 'Tgl Lahir', auto: true, half: true },
+  { name: 'birthDate', label: 'Tgl Lahir', auto: true, half: true, type: 'date' },
   { name: 'address', label: 'Alamat', auto: true, full: true },
   { name: 'province', label: 'Provinsi', auto: true, half: true },
   { name: 'city', label: 'Kota / Kab.', auto: true, half: true },
@@ -32,6 +33,20 @@ const splitFullName = (fullName = '') => {
   if (!normalized) return { firstName: '', lastName: '' }
   const [firstName, ...rest] = normalized.split(' ')
   return { firstName, lastName: rest.join(' ') }
+}
+
+// Normalize various date formats to YYYY-MM-DD for <input type="date">
+const toIsoDate = (raw = '') => {
+  if (!raw) return ''
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+  // DD-MM-YYYY or DD/MM/YYYY
+  const dmyMatch = raw.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/)
+  if (dmyMatch) return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`
+  // Fallback: let Date parse it
+  const d = new Date(raw)
+  if (!isNaN(d)) return d.toISOString().slice(0, 10)
+  return ''
 }
 
 const buildAddress = (alamat) => {
@@ -56,7 +71,50 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [uploadDone, setUploadDone] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const fileInputRef = useRef(null)
+
+  const handleConfirm = async () => {
+    setSubmitError(null)
+    setSubmitting(true)
+    const token = localStorage.getItem('reg_session_token')
+    try {
+      const body = new FormData()
+      if (ktpFile) body.append('ktp_file', ktpFile)
+      body.append('first_name', fields.firstName)
+      body.append('last_name', fields.lastName)
+      body.append('nik', fields.nik)
+      body.append('birth_place', fields.birthPlace)
+      body.append('birth_date', fields.birthDate)
+      body.append('address', fields.address)
+      body.append('province', fields.province)
+      body.append('city', fields.city)
+      body.append('phone_number', fields.phone)
+      body.append('email_contact', fields.email)
+      body.append('is_confirmed', 'true')
+
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/onboarding/identity`, {
+        method: 'POST',
+        headers: {
+          'X-Session-Token': token ?? '',
+        },
+        body,
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`)
+      }
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+      onNext({ ...fields, identityId: json?.data?.identity_id })
+    } catch (err) {
+      setSubmitError(err.message ?? 'Gagal menyimpan identitas. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const handleChange = (name, value) =>
     setFields((cur) => ({ ...cur, [name]: value }))
@@ -69,7 +127,7 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
       lastName: lastName || cur.lastName,
       nik: result?.nik || cur.nik,
       birthPlace: result?.tempat_lahir || cur.birthPlace,
-      birthDate: result?.tanggal_lahir || cur.birthDate,
+      birthDate: toIsoDate(result?.tanggal_lahir) || cur.birthDate,
       address: buildAddress(result?.alamat) || cur.address,
       province: result?.provinsi || cur.province,
       city: result?.kota_kabupaten || cur.city,
@@ -95,7 +153,7 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
     try {
       const formData = new FormData()
       formData.append('ktp', ktpFile)
-      const res = await fetch(url, { method: 'POST', body: formData })
+      const res = await apiFetch(url, { method: 'POST', body: formData })
       console.log('[KTP] status', res.status)
       if (!res.ok) throw new Error(`Server error: ${res.status}`)
       const payload = await res.json()
@@ -271,6 +329,7 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
                     className="h-9 w-full rounded-xl border border-[#d8d3ca] bg-[#fcfbf8] px-3 text-[0.88rem] text-[#1c1c1c] outline-none transition focus:border-[#2b6840] focus:ring-4 focus:ring-[#2b6840]/10"
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     placeholder={field.placeholder}
+                    type={field.type ?? 'text'}
                     value={fields[field.name]}
                   />
                 </div>
@@ -281,22 +340,35 @@ const OnboardingIdentitasDiri = ({ onNext, onBack }) => {
 
         {/* Footer */}
         <div className="mt-4 flex flex-col gap-3 border-t border-[#e1dacd] pt-4 lg:flex-row lg:items-center lg:justify-between">
-         
+          {submitError && (
+            <p className="text-[0.75rem] text-red-600">{submitError}</p>
+          )}
           <div className="flex flex-wrap items-center gap-2.5">
-           
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex h-10 items-center rounded-xl border border-[#d8d3ca] bg-[#fbfaf7] px-5 text-[0.88rem] font-semibold text-[#4f4c46] transition hover:border-[#cfc6b8] hover:bg-white"
+              disabled={submitting}
+              className="inline-flex h-10 items-center rounded-xl border border-[#d8d3ca] bg-[#fbfaf7] px-5 text-[0.88rem] font-semibold text-[#4f4c46] transition hover:border-[#cfc6b8] hover:bg-white disabled:opacity-50"
             >
               Kembali
             </button>
             <button
               type="button"
-              onClick={() => onNext(fields)}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#111411] px-5 text-[0.88rem] font-semibold text-white shadow-[0_18px_35px_rgba(17,20,17,0.16)] transition hover:-translate-y-0.5 hover:bg-[#181d18]"
+              onClick={handleConfirm}
+              disabled={submitting || !ktpFile}
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#111411] px-5 text-[0.88rem] font-semibold text-white shadow-[0_18px_35px_rgba(17,20,17,0.16)] transition hover:-translate-y-0.5 hover:bg-[#181d18] disabled:opacity-60"
             >
-              Konfirmasi &amp; Lanjut
+              {submitting ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Menyimpan...
+                </>
+              ) : (
+                'Konfirmasi & Lanjut'
+              )}
             </button>
           </div>
         </div>

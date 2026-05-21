@@ -9,10 +9,10 @@
       "type": "n8n-nodes-base.mistralAi",
       "typeVersion": 1,
       "position": [
-        5280,
-        3840
+        9216,
+        5584
       ],
-      "id": "556508a3-0ff5-4f32-aaea-9f8dc15daa19",
+      "id": "0e9bb6d1-f383-4261-a734-7335da9cb6e3",
       "name": "Extract text",
       "credentials": {
         "mistralCloudApi": {
@@ -25,9 +25,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "gemini/gemini-2.5-flash",
           "mode": "list",
-          "cachedResultName": "deepseek-v4-flash"
+          "cachedResultName": "gemini/gemini-2.5-flash"
         },
         "builtInTools": {},
         "options": {}
@@ -35,10 +35,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        5984,
-        5008
+        9664,
+        6704
       ],
-      "id": "90cb4a95-0e5f-49a0-b4ce-b98324772a50",
+      "id": "1a653130-dcc2-4d07-87da-ac4e41331790",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -54,10 +54,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5840,
-        3840
+        9936,
+        5584
       ],
-      "id": "1e0f8a38-50eb-4c81-af1b-3c3bdf1b7ccd",
+      "id": "748256bd-6108-4001-b4f9-51fc9068dd0b",
       "name": "Normalize JSON Output"
     },
     {
@@ -69,10 +69,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        5520,
-        3840
+        9568,
+        5584
       ],
-      "id": "5afc3f6b-f309-459a-bfa7-d8f00b00c20a",
+      "id": "f5da532b-d8c9-49a4-b398-409629e5e0d6",
       "name": "KTP Extractor"
     },
     {
@@ -84,10 +84,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        6048,
-        3840
+        10352,
+        5584
       ],
-      "id": "e8421770-d381-442c-844b-8b2a4de1d59a",
+      "id": "3845c8a2-fb69-4f36-8dbf-d981a0c4acb3",
       "name": "Respond to Webhook"
     },
     {
@@ -100,10 +100,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        5040,
-        3840
+        8720,
+        5584
       ],
-      "id": "8bf8e1a9-40e6-456d-bf9a-7dd9e2e50077",
+      "id": "96e59786-4a9a-4294-ae50-25569f9a8d30",
       "name": "Extract KTP",
       "webhookId": "03a6f598-930d-46b7-8ea0-2b672a3d9534"
     },
@@ -114,10 +114,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5936,
-        4576
+        10176,
+        6320
       ],
-      "id": "a2fae1a3-6a08-48fe-954d-612ca109dddd",
+      "id": "90111cc7-685c-4afd-9038-8fba27b93af6",
       "name": "Build Evidence Upload Request"
     },
     {
@@ -129,73 +129,11 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        6976,
-        4592
+        10800,
+        6320
       ],
-      "id": "f59225d2-6c98-4abf-b447-3962c18ebeff",
+      "id": "f607075c-a465-40c5-84c7-0ab93d9cc1c9",
       "name": "Respond Evidence Webhook"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "evidence-docs",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        4928,
-        4480
-      ],
-      "id": "d8534f0a-761d-4202-9122-9896e706ef8d",
-      "name": "Evidence Vault",
-      "webhookId": "11617f8a-cd44-4f7d-a3d7-5d1a1a6259d1"
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "https://experientially-unchallenging-amelie.ngrok-free.dev/api/v1/evidence/categories",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer REPLACE_WITH_USER_TOKEN"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          },
-          "timeout": 120000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        5136,
-        4320
-      ],
-      "id": "0b810f49-d9ef-48d3-bb88-7e3118b91956",
-      "name": "Get Evidence Categories"
-    },
-    {
-      "parameters": {
-        "jsCode": "const webhook = $node[\"Evidence Vault\"];\nconst source = webhook.json ?? {};\nconst body = source.body ?? {};\nconst binarySource = webhook.binary ?? {};\nconst document = binarySource.document ?? Object.values(binarySource)[0];\nif (!document) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst requirementId = String(body.requirement_id ?? '').trim().toUpperCase();\nif (!requirementId) {\n  throw new Error('Form-data `requirement_id` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst categories = Array.isArray($json?.data) ? $json.data : [];\nconst category = categories.find((item) => Array.isArray(item.requirements) && item.requirements.some((req) => String(req.requirement_id ?? '').toUpperCase() === requirementId));\nif (!category) {\n  throw new Error(`requirement_id ${requirementId} tidak ditemukan pada evidence categories.`);\n}\n\nconst requirement = category.requirements.find((req) => String(req.requirement_id ?? '').toUpperCase() === requirementId);\n\nreturn [{\n  json: {\n    requirement_id: requirementId,\n    category_id: String(category.category_id ?? category.code ?? requirementId.split('-')[0]).toUpperCase(),\n    category_code: String(category.code ?? category.category_id ?? '').toUpperCase(),\n    category_name: category.name ?? '',\n    category_weight: Number(category.weight ?? 0),\n    requirement_name: requirement?.name ?? '',\n    requirement_description: requirement?.description ?? '',\n    requirement_sort_order: Number(requirement?.sort_order ?? 0),\n    provided_ai_confidence: String(body.ai_confidence ?? '').trim(),\n    file_name: document.fileName ?? '',\n    mime_type: document.mimeType ?? ''\n  },\n  binary: {\n    document\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        5344,
-        4320
-      ],
-      "id": "ad5b73db-510b-4c91-8967-1ba20cc8ed52",
-      "name": "Resolve Requirement Context"
     },
     {
       "parameters": {
@@ -205,10 +143,10 @@
       "type": "n8n-nodes-base.mistralAi",
       "typeVersion": 1,
       "position": [
-        5360,
-        4560
+        9296,
+        6304
       ],
-      "id": "24d4128a-3ce5-4460-9190-e57df87b1066",
+      "id": "c53aabbd-cd80-4642-9d3b-5fd9b1dffb19",
       "name": "Extract Evidence Document",
       "credentials": {
         "mistralCloudApi": {
@@ -277,23 +215,23 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        5136,
-        4480
+        9072,
+        6224
       ],
-      "id": "7c0c4d60-0f2b-40a6-98d8-1f675441357f",
+      "id": "97693820-8c94-48b1-ab74-39f98a82214b",
       "name": "Switch"
     },
     {
       "parameters": {
-        "jsCode": "const source = $node[\"Resolve Requirement Context\"].json ?? {};\nconst document = $node[\"Resolve Requirement Context\"].binary?.document;\nif (!document) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst requirementId = String(source.requirement_id ?? '').trim().toUpperCase();\nconst prompt = [\n  `Anda menilai bukti kategori ${source.category_name || source.category_id || '-' } untuk GreenTrust Passport.`,\n  requirementId ? `Requirement target: ${requirementId} - ${source.requirement_name || ''}.` : 'Requirement target belum dikirim.',\n  source.requirement_description ? `Deskripsi requirement: ${source.requirement_description}` : '',\n  'Analisis gambar yang diunggah dan nilai seberapa kuat gambar ini mendukung requirement target.',\n  'Kembalikan JSON valid saja dengan schema berikut:',\n  '{\"image_summary\":\"\",\"visible_text\":[],\"visible_objects\":[],\"document_type_guess\":\"\",\"evidence_relevance\":\"\",\"ai_confidence\":0}',\n  'Aturan:',\n  '- image_summary: 1-3 kalimat ringkas terkait isi gambar.',\n  '- visible_text: array string teks yang benar-benar terlihat jika ada.',\n  '- visible_objects: array string objek utama yang relevan.',\n  '- document_type_guess: tebakan jenis dokumen/foto.',\n  '- evidence_relevance: alasan singkat keterkaitan gambar terhadap requirement.',\n  '- ai_confidence: angka 0 sampai 1, wajib 3 digit desimal. Contoh 0.873.',\n  '- Skor tinggi jika bukti visual sangat jelas dan relevan; skor rendah jika ambigu, blur, atau tidak mendukung requirement.',\n  '- Jangan kembalikan markdown atau teks di luar JSON.'\n].filter(Boolean).join('\\n');\n\nreturn [{\n  json: {\n    ...source,\n    file_name: source.file_name ?? document.fileName ?? '',\n    mime_type: source.mime_type ?? document.mimeType ?? '',\n    provided_requirement_id: requirementId,\n    provided_ai_confidence: String(source.provided_ai_confidence ?? '').trim(),\n    alibaba_request: {\n      model: 'qwen-vl-plus',\n      response_format: { type: 'json_object' },\n      messages: [\n        {\n          role: 'system',\n          content: 'You are a precise evidence analyst. Return valid JSON only.'\n        },\n        {\n          role: 'user',\n          content: [\n            {\n              type: 'text',\n              text: prompt\n            },\n            {\n              type: 'image_url',\n              image_url: {\n                url: `data:${document.mimeType};base64,${document.data}`\n              }\n            }\n          ]\n        }\n      ]\n    }\n  },\n  binary: {\n    document\n  }\n}];"
+        "jsCode": "const webhook = $node[\"Evidence Vault\"];\nconst source = webhook.json ?? {};\nconst body = source.body ?? {};\nconst inputItem = $input.first();\nconst binarySource = inputItem.binary ?? webhook.binary ?? {};\nconst binaryPropertyName = binarySource.document ? 'document' : Object.keys(binarySource)[0];\nconst document = binaryPropertyName ? binarySource[binaryPropertyName] : null;\nif (!document || !binaryPropertyName) {\n  throw new Error('Form-data `document` wajib dikirim pada webhook Evidence Vault.');\n}\n\nconst mimeType = String(document.mimeType ?? '').trim();\nif (!mimeType.toLowerCase().startsWith('image/')) {\n  throw new Error(`Jalur image vision hanya menerima file image/*, tetapi menerima ${mimeType || 'mimeType kosong'}.`);\n}\n\nconst binaryBuffer = await this.helpers.getBinaryDataBuffer(0, binaryPropertyName);\nif (!binaryBuffer?.length) {\n  throw new Error('Binary image tidak berhasil dibaca dari input item untuk dikirim ke Alibaba Vision.');\n}\n\nconst requirementId = String(body.requirement_id ?? '').trim().toUpperCase();\nconst prompt = [\n  'Anda menilai bukti kategori Bahan Baku & Sourcing untuk GreenTrust Passport.',\n  requirementId ? `Requirement target: ${requirementId}.` : 'Requirement target belum dikirim.',\n  'Analisis gambar yang diunggah dan nilai seberapa kuat gambar ini mendukung requirement target.',\n  'Kembalikan JSON valid saja dengan schema berikut:',\n  '{\"image_summary\":\"\",\"visible_text\":[],\"visible_objects\":[],\"document_type_guess\":\"\",\"evidence_relevance\":\"\",\"ai_confidence\":0}',\n  'Aturan:',\n  '- image_summary: 1-3 kalimat ringkas terkait isi gambar.',\n  '- visible_text: array string teks yang benar-benar terlihat jika ada.',\n  '- visible_objects: array string objek utama yang relevan.',\n  '- document_type_guess: tebakan jenis dokumen/foto.',\n  '- evidence_relevance: alasan singkat keterkaitan gambar terhadap requirement.',\n  '- ai_confidence: angka 0 sampai 1, wajib 3 digit desimal. Contoh 0.873.',\n  '- Skor tinggi jika bukti visual sangat jelas dan relevan; skor rendah jika ambigu, blur, atau tidak mendukung requirement.',\n  '- Jangan kembalikan markdown atau teks di luar JSON.'\n].join('\\n');\n\nreturn [{\n  json: {\n    file_name: document.fileName ?? '',\n    mime_type: mimeType,\n    provided_requirement_id: requirementId,\n    provided_ai_confidence: String(body.ai_confidence ?? '').trim(),\n    alibaba_request: {\n      model: 'qwen-vl-plus',\n      response_format: { type: 'json_object' },\n      messages: [\n        {\n          role: 'system',\n          content: 'You are a precise evidence analyst. Return valid JSON only.'\n        },\n        {\n          role: 'user',\n          content: [\n            {\n              type: 'text',\n              text: prompt\n            },\n            {\n              type: 'image_url',\n              image_url: {\n                url: `data:${mimeType};base64,${binaryBuffer.toString('base64')}`\n              }\n            }\n          ]\n        }\n      ]\n    }\n  },\n  binary: {\n    document\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5296,
-        4288
+        9232,
+        6032
       ],
-      "id": "c2f1cdb2-f525-4a03-a996-26b2dbfad0a7",
+      "id": "567f7354-35e5-4ae2-9de5-6240c81b6b5d",
       "name": "Prepare Image Vision Request"
     },
     {
@@ -329,10 +267,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5504,
-        4288
+        9440,
+        6032
       ],
-      "id": "c47510d8-f873-4d1b-8fa0-3a0e1e040808",
+      "id": "fbdc2d07-ea29-49e5-94d7-447a8b0ed846",
       "name": "HTTP Request"
     },
     {
@@ -342,10 +280,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5728,
-        4288
+        9664,
+        6032
       ],
-      "id": "35c68aa1-5870-46f4-a157-b97090061841",
+      "id": "92162f35-4e66-483c-aeeb-42e6ea32282e",
       "name": "Scoring Image Evidence"
     },
     {
@@ -355,10 +293,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5600,
-        4576
+        9536,
+        6320
       ],
-      "id": "1ca7924d-4a86-47c1-8719-9aaddf60889b",
+      "id": "55f6720c-3cd3-48bd-a9c2-aba251605f09",
       "name": "Scoring Docs Evidence"
     },
     {
@@ -368,10 +306,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6016,
-        4288
+        10464,
+        6032
       ],
-      "id": "c3ad8ffe-0d54-4b89-9a10-7144125904fb",
+      "id": "0adce434-7444-45b9-86de-c582087af179",
       "name": "Build Evidence Upload Request1"
     },
     {
@@ -419,10 +357,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        6608,
-        4288
+        10880,
+        6032
       ],
-      "id": "9f90b634-db54-4e66-b57b-3064762e9100",
+      "id": "18b0fa13-24c6-44f9-802e-16865e0b4034",
       "name": "HTTP Request1"
     },
     {
@@ -434,7 +372,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer REPLACE_WITH_USER_TOKEN"
+              "value": "={{ $('Evidence Vault').item.json.headers.authorization }}"
             }
           ]
         },
@@ -470,10 +408,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        6560,
-        4592
+        10496,
+        6320
       ],
-      "id": "0bd73644-7c2d-4394-b7c1-be8b30901eaf",
+      "id": "b2a157de-f3bd-416d-8a8e-effba539a385",
       "name": "HTTP Request2"
     },
     {
@@ -485,10 +423,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        6912,
-        4288
+        11088,
+        6032
       ],
-      "id": "cf8e368c-86e5-4667-b402-de165a7e0297",
+      "id": "7288578c-c711-4f48-a16b-c1aa50dba135",
       "name": "Respond Evidence Webhook1"
     },
     {
@@ -500,10 +438,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        6272,
-        4304
+        10032,
+        6032
       ],
-      "id": "e0dc34a1-4351-4029-9dc5-4c8bd6e74a77",
+      "id": "e5dc467a-a0b2-4ca7-a4e8-1eecb666d16d",
       "name": "Basic LLM Chain"
     },
     {
@@ -515,11 +453,28 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        6144,
-        4576
+        9840,
+        6320
       ],
-      "id": "1aa7bb3b-ba11-440a-af0f-95ecc875e5d8",
+      "id": "3c9130da-ab37-4b99-863a-cf4aba9fcd4d",
       "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evidence-docs",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        8832,
+        6224
+      ],
+      "id": "56448921-2e99-487f-984c-7be6f8358515",
+      "name": "Evidence Vault",
+      "webhookId": "11617f8a-cd44-4f7d-a3d7-5d1a1a6259d1"
     }
   ],
   "pinData": {},
@@ -594,17 +549,6 @@
         [
           {
             "node": "HTTP Request2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Evidence Vault": {
-      "main": [
-        [
-          {
-            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -738,6 +682,17 @@
           }
         ]
       ]
+    },
+    "Evidence Vault": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -745,7 +700,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "8df3f4fa-c5e8-4565-8a44-27608a3525dd",
+  "versionId": "02e0f65b-1255-4145-8acd-7f277ddf9435",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e901acb807f6f1eb84add1628862abce2439962dc055c79b585eb9f923890bb7"

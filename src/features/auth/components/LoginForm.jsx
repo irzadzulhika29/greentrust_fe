@@ -7,6 +7,8 @@ const LoginForm = ({
   forgotLabel = 'Lupa?',
   submitLabel = 'Masuk',
   secondaryLabel = 'Masuk dengan Google',
+  submitting = false,
+  error = null,
 }) => {
   return (
     <form className="mt-5 space-y-3.5" onSubmit={onSubmit}>
@@ -20,6 +22,7 @@ const LoginForm = ({
           id="email"
           name="email"
           type="email"
+          required
         />
       </div>
 
@@ -38,6 +41,7 @@ const LoginForm = ({
           id="password"
           name="password"
           type="password"
+          required
         />
       </div>
 
@@ -51,8 +55,12 @@ const LoginForm = ({
         <span>Ingat saya di perangkat ini</span>
       </label>
 
-      <PressButton type="submit" variant="primary" className="h-10.5 w-full text-[0.9rem]">
-        {submitLabel}
+      {error && (
+        <p className="text-[0.78rem] text-red-600">{error}</p>
+      )}
+
+      <PressButton type="submit" variant="primary" className="h-10.5 w-full text-[0.9rem]" disabled={submitting}>
+        {submitting ? 'Memproses...' : submitLabel}
       </PressButton>
 
       <div className="flex items-center gap-3 pt-0.5">

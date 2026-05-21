@@ -1,0 +1,26 @@
+[2m22.57.09[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mThe final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.
+
+Previous: []
+Incoming: [BB]
+[2m22.57.30[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError fetching categories: TypeError: Failed to fetch
+    at apiFetch (http://localhost:5173/src/lib/utils.js:12:9)
+    at fetchCategories (http://localhost:5173/src/features/umkm/pages/EvidenceIndicatorDetailPage.jsx?t=1779379028213:57:23)
+    at http://localhost:5173/src/features/umkm/pages/EvidenceIndicatorDetailPage.jsx?t=1779379028213:78:3
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:12903:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:6616:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:6651:55)
+    at reconnectPassiveEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:7700:6)
+    at doubleInvokeEffectsOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:8923:125)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:850:66)
+[2m22.57.30[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError fetching categories: TypeError: Failed to fetch
+    at apiFetch (http://localhost:5173/src/lib/utils.js:12:9)
+    at fetchCategories (http://localhost:5173/src/features/umkm/pages/EvidenceIndicatorDetailPage.jsx?t=1779379028213:57:23)
+    at http://localhost:5173/src/features/umkm/pages/EvidenceIndicatorDetailPage.jsx?t=1779379028213:78:3
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:12903:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:6616:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:6651:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:7617:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:7605:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3ad99ab3:7671:14)

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Leaf } from 'lucide-react'
 import AuthBrand from '@/features/auth/components/AuthBrand'
@@ -5,6 +6,7 @@ import AuthModeSwitch from '@/features/auth/components/AuthModeSwitch'
 import { PassportPreviewCard } from '@/features/auth/components/AuthPreviewCards'
 import AuthShell from '@/features/auth/components/AuthShell'
 import LoginForm from '@/features/auth/components/LoginForm'
+import { apiFetch, getAuthPayload } from '@/lib/utils'
 
 const statItems = [
   { label: 'PASSPORT AKTIF', value: '128' },
@@ -13,12 +15,40 @@ const statItems = [
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault()
+    setError(null)
     const data = Object.fromEntries(new FormData(e.currentTarget).entries())
-    console.log('Login:', data)
-    navigate('/umkm')
+
+    setSubmitting(true)
+    try {
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`)
+      }
+      const token = json?.data?.token
+      if (token) {
+        localStorage.setItem('auth_token', token)
+      }
+      const payload = getAuthPayload()
+      if (payload?.RoleName === 'investor') {
+        navigate('/investor')
+      } else {
+        navigate('/umkm')
+      }
+    } catch (err) {
+      setError(err.message ?? 'Login gagal. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const leftPanel = (
@@ -45,9 +75,9 @@ const LoginPage = () => {
         />
 
         <LoginForm
-          defaultEmail="siti@batiksitijogja.id"
-          defaultPassword="••••••••••"
           onSubmit={handleSignIn}
+          submitting={submitting}
+          error={error}
         />
 
         <div className="mt-4 text-center text-[0.82rem] text-[#656058]">

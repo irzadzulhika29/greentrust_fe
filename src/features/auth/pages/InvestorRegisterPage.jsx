@@ -6,6 +6,7 @@ import AuthModeSwitch from '@/features/auth/components/AuthModeSwitch'
 import { StepListPreview } from '@/features/auth/components/AuthPreviewCards'
 import AuthShell from '@/features/auth/components/AuthShell'
 import RegisterForm from '@/features/auth/components/RegisterForm'
+import { apiFetch } from '@/lib/utils'
 
 const investorSteps = [
   { number: '01', title: 'Verifikasi email', desc: 'Aktivasi akses investor dari kotak masuk Anda', tone: 'active' },
@@ -16,16 +17,88 @@ const investorSteps = [
 
 const InvestorRegisterPage = () => {
   const navigate = useNavigate()
+  const [showOtp, setShowOtp] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [otpError, setOtpError] = useState(null)
+  const [otpVerifying, setOtpVerifying] = useState(false)
   const [formData, setFormData] = useState({ email: '', password: '', confirm_password: '' })
 
   const handleFormChange = (field, value) => {
     setFormData((cur) => ({ ...cur, [field]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Temporary slicing bypass: jump straight into onboarding so step flow/UI can be reviewed.
-    navigate('/investor/onboarding')
+    setError(null)
+
+    if (formData.password !== formData.confirm_password) {
+      setError('Password dan konfirmasi password tidak sama.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          confirm_password: formData.confirm_password,
+          role: 'investor',
+        }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`)
+      }
+
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+
+      setShowOtp(true)
+    } catch (err) {
+      setError(err.message ?? 'Pendaftaran gagal. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleOtpComplete = async (code) => {
+    setOtpError(null)
+    setOtpVerifying(true)
+    const token = localStorage.getItem('reg_session_token')
+
+    try {
+      const res = await apiFetch(`${import.meta.env.VITE_BASE_API}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token ?? '',
+        },
+        body: JSON.stringify({ code }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        throw new Error(json?.message ?? `Error ${res.status}`)
+      }
+
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+
+      navigate('/investor/onboarding')
+    } catch (err) {
+      setOtpError(err.message ?? 'Kode OTP salah. Coba lagi.')
+    } finally {
+      setOtpVerifying(false)
+    }
   }
 
   const leftPanel = (
@@ -53,17 +126,17 @@ const InvestorRegisterPage = () => {
 
         <RegisterForm
           confirmPassword={formData.confirm_password}
-          disableValidation
           email={formData.email}
-          error={null}
+          error={error}
           onFieldChange={handleFormChange}
+          onOtpComplete={handleOtpComplete}
           onSubmit={handleSubmit}
-          otpError={null}
-          otpVerifying={false}
+          otpError={otpError}
+          otpVerifying={otpVerifying}
           password={formData.password}
-          showOtp={false}
+          showOtp={showOtp}
           submitLabel="Buat Akun Investor"
-          submitting={false}
+          submitting={submitting}
         />
 
         <div className="mt-4 text-center text-[0.82rem] text-[#656058]">
