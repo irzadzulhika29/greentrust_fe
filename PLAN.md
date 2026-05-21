@@ -81,6 +81,9 @@ Route belum lengkap di `router.jsx:1` — minimum yang harus ditambah:
 - `/investor` + `/investor/explore` — list UMKM untuk investor login
 - `/admin/reports` — moderasi laporan publik
 - Route guard berdasarkan role (UMKM tidak boleh masuk `/admin`, dst).
+- `/investor/onboarding` â€” onboarding investor 3 langkah (identitas, riwayat pekerjaan, selesai)
+- `/investor/dashboard` â€” entry dashboard investor setelah onboarding selesai
+- `/investor` tetap dipakai sebagai direktori publik investor
 
 ---
 
@@ -128,6 +131,8 @@ PRD §13.1 punya timeline 12 minggu. Karena ini hackathon dan repo baru tahap sc
 PRD US-07 s/d US-10 + US-INV01.
 - Register UMKM (email/password) + verifikasi email
 - Register Investor (explicit investor auth path, investor-first slice)
+- Register investor sukses lanjut ke `/investor/onboarding`, bukan langsung ke dashboard
+- Onboarding investor 3 langkah: identitas diri â†’ riwayat pekerjaan â†’ selesai, lalu CTA ke `/investor/dashboard`
 - Onboarding wizard 2 langkah: identitas diri (KTP upload + OCR via n8n) → identitas bisnis (termasuk `whatsapp_number` validasi format `628xxx`)
 - `profile_completion_score` dihitung server-side, gate route `/umkm/evidence` di backend (return 403) **dan** di FE
 
