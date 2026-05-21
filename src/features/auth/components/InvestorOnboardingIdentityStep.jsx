@@ -230,7 +230,7 @@ const InvestorOnboardingIdentityStep = ({ values, onChange, onBack, onNext }) =>
         <section className="flex min-h-0 flex-col pb-20">
           <div className="mb-4">
             <span className="text-[0.82rem] font-medium text-[#8c877d]">
-              Hasil OCR — periksa & koreksi
+              Periksa & koreksi kembali data anda
             </span>
           </div>
 

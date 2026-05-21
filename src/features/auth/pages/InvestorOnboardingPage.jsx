@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import InvestorOnboardingCareerStep from '@/features/auth/components/InvestorOnboardingCareerStep'
-import InvestorOnboardingCompleteStep from '@/features/auth/components/InvestorOnboardingCompleteStep'
 import InvestorOnboardingHeader from '@/features/auth/components/InvestorOnboardingHeader'
 import InvestorOnboardingIdentityStep from '@/features/auth/components/InvestorOnboardingIdentityStep'
 
@@ -33,13 +33,52 @@ const initialCareerForm = {
     'Mengelola portofolio 12 UMKM tekstil & agrikultur di Indonesia. Lead 4 deal pendanaan Seri-A dengan total tiket Rp 2.8 M. Fokus pada UMKM ekspor berorientasi ESG.',
   skillTags: ['Green Finance', 'Due Diligence', 'ESG Scoring', 'Portfolio Mgmt'],
   ticketRange: 'Rp 500jt — 5M',
-  sectorFocus: '12 UMKM',
+  sectorFocus: ['Agrikultur', 'Tekstil & Batik'],
   approvalRate: '62%',
 }
+
+const CompleteOverlay = () => (
+  <motion.div
+    animate={{ opacity: 1 }}
+    className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-[#f6f2ea]"
+    exit={{ opacity: 0 }}
+    initial={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+  >
+    <motion.div
+      animate={{ scale: 1 }}
+      className="flex h-20 w-20 items-center justify-center rounded-full bg-[#205336]"
+      initial={{ scale: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22, delay: 0.15 }}
+    >
+      <svg fill="none" height="40" viewBox="0 0 40 40" width="40">
+        <motion.path
+          animate={{ pathLength: 1 }}
+          d="M8 20 L16 28 L32 12"
+          initial={{ pathLength: 0 }}
+          stroke="white"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+          transition={{ duration: 0.4, delay: 0.5, ease: 'easeOut' }}
+        />
+      </svg>
+    </motion.div>
+    <motion.p
+      animate={{ opacity: 1, y: 0 }}
+      className="text-[0.9rem] text-[#7d786f]"
+      initial={{ opacity: 0, y: 6 }}
+      transition={{ delay: 0.8, duration: 0.3 }}
+    >
+      Profil disimpan, membuka dashboard...
+    </motion.p>
+  </motion.div>
+)
 
 const InvestorOnboardingPage = () => {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
+  const [showComplete, setShowComplete] = useState(false)
   const [identityForm, setIdentityForm] = useState(initialIdentityForm)
   const [careerForm, setCareerForm] = useState(initialCareerForm)
 
@@ -60,8 +99,20 @@ const InvestorOnboardingPage = () => {
     }))
   }
 
+  const handleComplete = () => {
+    setShowComplete(true)
+  }
+
+  useEffect(() => {
+    if (!showComplete) return
+    const timer = setTimeout(() => navigate('/investor/dashboard'), 2000)
+    return () => clearTimeout(timer)
+  }, [showComplete, navigate])
+
   return (
     <div className="min-h-screen bg-[#f6f2ea] text-[#1d211b]">
+      <AnimatePresence>{showComplete ? <CompleteOverlay key="complete" /> : null}</AnimatePresence>
+
       <div className="flex min-h-screen flex-col">
         <InvestorOnboardingHeader step={step} onExit={() => navigate('/investor/login')} />
 
@@ -81,18 +132,9 @@ const InvestorOnboardingPage = () => {
                 identityValues={identityForm}
                 onBack={() => setStep(1)}
                 onChange={handleCareerChange}
-                onNext={() => setStep(3)}
+                onNext={handleComplete}
                 onToggleSkill={handleSkillToggle}
                 values={careerForm}
-              />
-            ) : null}
-
-            {step === 3 ? (
-              <InvestorOnboardingCompleteStep
-                careerValues={careerForm}
-                identityValues={identityForm}
-                onBack={() => setStep(2)}
-                onContinue={() => navigate('/investor/dashboard')}
               />
             ) : null}
           </div>

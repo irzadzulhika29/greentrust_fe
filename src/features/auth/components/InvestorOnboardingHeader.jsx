@@ -1,9 +1,9 @@
+import { motion } from 'framer-motion'
 import primaryLogo from '@/assets/logo/primary-def.webp'
 
 const STEPS = [
   { number: 1, label: 'Identitas Diri' },
   { number: 2, label: 'Riwayat Pekerjaan' },
-  { number: 3, label: 'Selesai' },
 ]
 
 const InvestorOnboardingHeader = ({ step, onExit }) => {
@@ -23,55 +23,61 @@ const InvestorOnboardingHeader = ({ step, onExit }) => {
             </div>
           </div>
 
-          <div className="hidden items-center gap-4 lg:flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e8f0eb] px-3 py-1 text-[0.7rem] font-semibold text-[#205336]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#205336]" />
-              Investor
-            </span>
+          <nav className="hidden items-center gap-2 lg:flex">
+            {STEPS.map((item, index) => {
+              const state = item.number === step ? 'active' : item.number < step ? 'done' : 'idle'
 
-            <nav className="flex items-center gap-3">
-              {STEPS.map((item, index) => {
-                const state =
-                  item.number === step ? 'active' : item.number < step ? 'done' : 'idle'
-
-                return (
-                  <div className="flex items-center gap-3" key={item.label}>
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`grid h-7 w-7 place-items-center rounded-full text-[0.78rem] font-semibold ${
-                          state === 'active'
-                            ? 'bg-[#101310] text-white'
-                            : state === 'done'
-                            ? 'bg-[#205336] text-white'
-                            : 'bg-[#f3eee5] text-[#8f8a81]'
-                        }`}
-                      >
-                        {item.number}
-                      </div>
-                      <span
-                        className={`text-[0.9rem] font-semibold ${
-                          state === 'idle' ? 'text-[#979188]' : 'text-[#20241f]'
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    </div>
-                    {index < STEPS.length - 1 ? <div className="h-px w-10 bg-[#ddd7cc]" /> : null}
+              return (
+                <div className="flex items-center gap-2" key={item.label}>
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{
+                        backgroundColor:
+                          state === 'active' ? '#101310' : state === 'done' ? '#205336' : '#ede8df',
+                        color: state === 'idle' ? '#8f8a81' : '#ffffff',
+                      }}
+                      className="grid h-6 w-6 place-items-center rounded-full text-[0.72rem] font-semibold"
+                      transition={{ duration: 0.35 }}
+                    >
+                      {item.number}
+                    </motion.div>
+                    <motion.span
+                      animate={{
+                        color: state === 'idle' ? '#979188' : '#20241f',
+                        opacity: state === 'idle' ? 0.6 : 1,
+                      }}
+                      className="text-[0.88rem] font-semibold"
+                      transition={{ duration: 0.35 }}
+                    >
+                      {item.label}
+                    </motion.span>
                   </div>
-                )
-              })}
-            </nav>
-          </div>
+
+                  {index < STEPS.length - 1 ? (
+                    <div className="relative mx-1 h-px w-12 bg-[#ddd7cc]">
+                      <motion.div
+                        animate={{ width: step > item.number ? '100%' : '0%' }}
+                        className="absolute inset-y-0 left-0 bg-[#205336]"
+                        transition={{ duration: 0.4, ease: 'easeInOut' }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+          </nav>
         </div>
 
-        <button
-          className="inline-flex items-center gap-2 text-[0.92rem] font-semibold text-[#726d64] transition-colors duration-200 hover:text-[#1d211b]"
-          onClick={onExit}
-          type="button"
-        >
-          Keluar
-          <span aria-hidden="true">→</span>
-        </button>
+        <div className="flex items-center gap-5">
+          <span className="text-[0.82rem] font-medium text-[#9a9289]">Investor</span>
+          <button
+            className="text-[0.88rem] font-medium text-[#726d64] transition-colors duration-200 hover:text-[#1d211b]"
+            onClick={onExit}
+            type="button"
+          >
+            Keluar →
+          </button>
+        </div>
       </div>
     </header>
   )
