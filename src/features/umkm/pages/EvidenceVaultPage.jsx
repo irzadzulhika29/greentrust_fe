@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowRight, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getIndicatorHref } from '@/features/umkm/data/evidenceVaultData'
 import { apiFetch } from '@/lib/utils'
@@ -90,6 +90,7 @@ const EvidenceCategoryCard = ({ category }) => {
 
 const EvidenceVaultPage = () => {
   const [summary, setSummary] = useState(null)
+  const [recommendations, setRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
 
@@ -107,6 +108,7 @@ const EvidenceVaultPage = () => {
             passport_status: json.data.passport_status,
             categories: json.data.categories.map(normaliseApiCategory),
           })
+          setRecommendations(json.data.next_recommendations ?? [])
         } else {
           throw new Error(json?.message ?? 'Gagal memuat data')
         }
@@ -205,18 +207,80 @@ const EvidenceVaultPage = () => {
           )}
         </section>
 
-        {/* Category cards */}
-        <section className="mt-6 grid gap-6 xl:grid-cols-3">
-          {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-[18px] bg-[#e9ece8]" />
-            ))
-          ) : (
-            categories.map((category) => (
-              <EvidenceCategoryCard category={category} key={category.code} />
-            ))
-          )}
-        </section>
+        {/* Category cards + Recommendations */}
+        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 content-start">
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-48 animate-pulse rounded-[18px] bg-[#e9ece8]" />
+              ))
+            ) : (
+              categories.map((category) => (
+                <EvidenceCategoryCard category={category} key={category.code} />
+              ))
+            )}
+          </section>
+
+          {/* Recommendations panel */}
+          <aside className="space-y-4">
+            <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-5 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
+              <div className="mb-4 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-[#236041]" />
+                <div className="text-[0.72rem] font-semibold uppercase tracking-[0.34em] text-[#8d877f]">
+                  Rekomendasi Berikutnya
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 py-6 text-[#8d877f]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Memuat...</span>
+                </div>
+              ) : recommendations.length === 0 ? (
+                <div className="py-6 text-center text-sm text-[#8d877f]">Semua kategori sudah lengkap.</div>
+              ) : (
+                <div className="space-y-4">
+                  {recommendations.map((rec) => (
+                    <div key={rec.category_id} className="rounded-[14px] border border-[#e9ece8] bg-[#fbfaf7] p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[0.75rem] font-bold"
+                            style={{ backgroundColor: '#f0ece4', color: '#5f5a53' }}
+                          >
+                            {rec.code}
+                          </div>
+                          <div className="text-[0.88rem] font-bold text-[#20201c]">{rec.name}</div>
+                        </div>
+                        <div className="shrink-0 rounded-full bg-[#dcebdc] px-2.5 py-0.5 text-[0.72rem] font-bold text-[#236041]">
+                          +{rec.potential_grs_gain} poin
+                        </div>
+                      </div>
+                      <p className="text-[0.78rem] text-[#5f5a53] leading-5 mb-3">{rec.reason}</p>
+                      {rec.missing_requirements?.length > 0 && (
+                        <div className="space-y-1.5 mb-3">
+                          {rec.missing_requirements.map((req) => (
+                            <div key={req.requirement_id} className="flex items-start gap-2 text-[0.75rem] text-[#8d877f]">
+                              <div className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#8d877f]" />
+                              {req.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <Link
+                        to={getIndicatorHref(rec.code.toLowerCase())}
+                        className="inline-flex items-center gap-1.5 text-[0.78rem] font-bold text-[#236041] transition hover:text-[#173f2b]"
+                      >
+                        Unggah dokumen
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </aside>
+        </div>
       </main>
     </div>
   )

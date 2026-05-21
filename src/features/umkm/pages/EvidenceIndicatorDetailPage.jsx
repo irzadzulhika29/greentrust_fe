@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
-  categories,
   findEvidenceIndicatorBySlug,
   getIndicatorHref,
 } from "@/features/umkm/data/evidenceVaultData";
@@ -333,10 +332,12 @@ const EvidenceIndicatorDetailPage = () => {
   const [selectedRequirement, setSelectedRequirement] = useState(null);
   const [categoryDetail, setCategoryDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
+  const [nextRecommendations, setNextRecommendations] = useState([]);
 
   useEffect(() => {
     if (!indicator) return;
     const token = localStorage.getItem("auth_token") ?? "";
+
     apiFetch(`${BASE_API}/evidence/categories/${indicator.code}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -346,21 +347,21 @@ const EvidenceIndicatorDetailPage = () => {
       })
       .catch(() => {})
       .finally(() => setLoadingDetail(false));
+
+    apiFetch(`${BASE_API}/evidence/summary`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        const recs = json?.data?.next_recommendations ?? [];
+        setNextRecommendations(recs.filter((r) => r.code !== indicator.code).slice(0, 3));
+      })
+      .catch(() => {});
   }, [indicator]);
 
   if (!indicator) {
     return <Navigate to="/umkm/evidence" replace />;
   }
-
-  const nextPriorityItems = indicator.nextPriority
-    .map((item) => {
-      const linkedCategory = categories.find(
-        (category) => category.code === item.code,
-      );
-
-      return linkedCategory ? { ...item, ...linkedCategory } : null;
-    })
-    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#20201c]">
@@ -490,35 +491,34 @@ const EvidenceIndicatorDetailPage = () => {
                 </div>
 
                 <div className="mt-4 space-y-1">
-                  {nextPriorityItems.map((item) => (
+                  {nextRecommendations.length === 0 ? (
+                    <div className="py-4 text-center text-sm text-[#8d877f]">Semua kategori sudah lengkap.</div>
+                  ) : nextRecommendations.map((rec) => (
                     <Link
-                      key={item.code}
-                      to={getIndicatorHref(item.slug)}
+                      key={rec.category_id}
+                      to={getIndicatorHref(rec.code.toLowerCase())}
                       className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
                     >
                       <div className="flex min-w-0 items-start gap-4">
                         <div
                           className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[0.95rem] font-bold"
-                          style={{
-                            backgroundColor: item.tint,
-                            color: item.color,
-                          }}
+                          style={{ backgroundColor: '#f0ece4', color: '#5f5a53' }}
                         >
-                          {item.code}
+                          {rec.code}
                         </div>
                         <div className="min-w-0">
                           <div className="text-[1rem] font-bold leading-tight text-[#20201c]">
-                            {item.title}
+                            {rec.name}
                           </div>
                           <div className="mt-1 text-[0.86rem] font-normal text-[#8a857d]">
-                            {item.note}
+                            {rec.reason}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-3">
-                        <div className="text-[0.96rem] font-bold text-[#c47739]">
-                          {item.gain}
+                        <div className="text-[0.96rem] font-bold text-[#236041]">
+                          +{rec.potential_grs_gain}
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#7d7870]" />
                       </div>
