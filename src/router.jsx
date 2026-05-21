@@ -9,10 +9,16 @@ import RegisterPage from '@/features/auth/pages/RegisterPage'
 // Public
 import LandingPage  from '@/features/public/pages/LandingPage'
 import InvestorDirectoryPage from '@/features/public/pages/InvestorDirectoryPage'
+import InvestorDetailPage from '@/features/public/pages/InvestorDetailPage'
 import UmkmDirectoryPage from '@/features/public/pages/UmkmDirectoryPage'
 import PassportDetailPage from '@/features/public/pages/PassportDetailPage'
 
-// UMKM
+// Investor
+import InvestorLayout from '@/features/investor/components/InvestorLayout'
+import InvestorDashboardPage from '@/features/investor/pages/InvestorDashboardPage'
+import InvestorProposalPage from '@/features/investor/pages/InvestorProposalPage'
+import InvestorProfilPage from '@/features/investor/pages/InvestorProfilPage'
+import InvestorDisimpanPage from '@/features/investor/pages/InvestorDisimpanPage'
 import UmkmDashboard from '@/features/umkm/pages/DashboardPage'
 import UmkmEvidenceVault from '@/features/umkm/pages/EvidenceVaultPage'
 import UmkmEvidenceIndicatorDetail from '@/features/umkm/pages/EvidenceIndicatorDetailPage'
@@ -36,6 +42,15 @@ const AppRouter = () => {
         {/* Public — no sidebar */}
         <Route path="/"         element={<LandingPage />} />
         <Route path="/investor" element={<InvestorDirectoryPage />} />
+        <Route path="/investor/:slug" element={<InvestorDetailPage />} />
+
+        {/* Investor dashboard — with sidebar */}
+        <Route path="/investor" element={<InvestorLayout />}>
+          <Route path="dashboard" element={<InvestorDashboardPage />} />
+          <Route path="proposal" element={<InvestorProposalPage />} />
+          <Route path="profil" element={<InvestorProfilPage />} />
+          <Route path="disimpan" element={<InvestorDisimpanPage />} />
+        </Route>
         <Route path="/direktori" element={<UmkmDirectoryPage />} />
         <Route path="/passport/:slug" element={<PassportDetailPage />} />
         <Route path="/login"    element={<LoginPage />} />
