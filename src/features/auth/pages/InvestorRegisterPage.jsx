@@ -159,8 +159,8 @@ const InvestorRegisterPage = () => {
           Setelah daftar, Anda akan melalui <span className="font-normal italic text-[#A1D0AA]">5 langkah</span> singkat.
         </>
       }
-      rightCard={<StepListPreview steps={investorSteps} />}
-      rightCardWrapperClassName="justify-start pl-2 pt-10 xl:pl-1"
+      rightCard={<StepListPreview compact steps={investorSteps} />}
+      rightCardAbsoluteClassName="bottom-10 left-14 right-14 xl:left-16 xl:right-16"
       rightFooter={null}
     />
   )
