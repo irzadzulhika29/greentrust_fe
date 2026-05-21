@@ -1,0 +1,59 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import AppLayout from '@/components/shared/AppLayout'
+
+// Auth
+import LoginPage    from '@/features/auth/pages/LoginPage'
+import OnboardingPage from '@/features/auth/pages/OnboardingPage'
+import RegisterPage from '@/features/auth/pages/RegisterPage'
+
+// Public
+import LandingPage  from '@/features/public/pages/LandingPage'
+
+// UMKM
+import UmkmDashboard from '@/features/umkm/pages/DashboardPage'
+import UmkmClaim     from '@/features/umkm/pages/ClaimPage'
+import UmkmProfile   from '@/features/umkm/pages/ProfilePage'
+
+// Auditor
+import AuditorDashboard from '@/features/auditor/pages/DashboardPage'
+import AuditorReview    from '@/features/auditor/pages/ReviewPage'
+import AuditorHistory   from '@/features/auditor/pages/HistoryPage'
+
+// Admin
+import AdminDashboard from '@/features/admin/pages/DashboardPage'
+import AdminUsers     from '@/features/admin/pages/UsersPage'
+import AdminSettings  from '@/features/admin/pages/SettingsPage'
+
+const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public — no sidebar */}
+        <Route path="/"         element={<LandingPage />} />
+        <Route path="/login"    element={<LoginPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* UMKM — with sidebar */}
+        <Route path="/umkm" element={<AppLayout><UmkmDashboard /></AppLayout>} />
+        <Route path="/umkm/claim"   element={<AppLayout><UmkmClaim /></AppLayout>} />
+        <Route path="/umkm/profile" element={<AppLayout><UmkmProfile /></AppLayout>} />
+
+        {/* Auditor — with sidebar */}
+        <Route path="/auditor"         element={<AppLayout><AuditorDashboard /></AppLayout>} />
+        <Route path="/auditor/review"  element={<AppLayout><AuditorReview /></AppLayout>} />
+        <Route path="/auditor/history" element={<AppLayout><AuditorHistory /></AppLayout>} />
+
+        {/* Admin — with sidebar */}
+        <Route path="/admin"          element={<AppLayout><AdminDashboard /></AppLayout>} />
+        <Route path="/admin/users"    element={<AppLayout><AdminUsers /></AppLayout>} />
+        <Route path="/admin/settings" element={<AppLayout><AdminSettings /></AppLayout>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default AppRouter
