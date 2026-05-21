@@ -63,7 +63,7 @@ Routing sudah di-scaffold di `src/router.jsx:1`. Mapping fitur PRD ke folder:
 | Domain PRD | Folder | Halaman utama |
 |---|---|---|
 | Landing page + detail UMKM publik (PRD §5.2) | `src/features/public/` | `pages/LandingPage.jsx`, *(belum)* `pages/UmkmDetailPage.jsx`, `pages/PassportPage.jsx` |
-| Auth (PRD §7.3, US-07/INV01) | `src/features/auth/` | `LoginPage.jsx`, `RegisterPage.jsx` (perlu role toggle UMKM/Investor) |
+| Auth (PRD §7.3, US-07/INV01) | `src/features/auth/` | `LoginPage.jsx`, `RegisterPage.jsx`, `InvestorLoginPage.jsx`, `InvestorRegisterPage.jsx` |
 | UMKM dashboard, Evidence Vault, GRS, Passport (PRD §5.1, §6) | `src/features/umkm/` | `DashboardPage.jsx`, `ClaimPage.jsx`, `ProfilePage.jsx` + perlu tambah: `EvidenceVaultPage.jsx`, `PassportPage.jsx`, `OnboardingPage.jsx` |
 | Investor view (PRD §7.4b) | *(belum ada)* `src/features/investor/` | Investor reuse halaman publik UMKM detail dengan permission ditingkatkan. Halaman list/filter setelah login. |
 | Auditor (di luar PRD — keputusan tim) | `src/features/auditor/` | `DashboardPage.jsx`, `ReviewPage.jsx`, `HistoryPage.jsx` — moderasi dokumen low-confidence AI |
@@ -73,7 +73,9 @@ Routing sudah di-scaffold di `src/router.jsx:1`. Mapping fitur PRD ke folder:
 
 Route belum lengkap di `router.jsx:1` — minimum yang harus ditambah:
 - `/passport/:slug` — public detail (PRD US-03, US-21)
-- `/umkm/onboarding` — wizard identitas diri + bisnis (PRD §5.1 step 3–4)
+- `/login` + `/register` — current-state UMKM auth entry
+- `/investor/login` + `/investor/register` — investor auth entry
+- `/onboarding` — current-state UMKM onboarding, kept unchanged in this slice
 - `/umkm/evidence` — Evidence Vault (PRD §7.4)
 - `/umkm/passport` — submit blockchain + lihat passport sendiri
 - `/investor` + `/investor/explore` — list UMKM untuk investor login
@@ -125,7 +127,7 @@ PRD §13.1 punya timeline 12 minggu. Karena ini hackathon dan repo baru tahap sc
 ### Fase 1 — Auth + Onboarding UMKM
 PRD US-07 s/d US-10 + US-INV01.
 - Register UMKM (email/password) + verifikasi email
-- Register Investor (toggle role di RegisterPage)
+- Register Investor (explicit investor auth path, investor-first slice)
 - Onboarding wizard 2 langkah: identitas diri (KTP upload + OCR via n8n) → identitas bisnis (termasuk `whatsapp_number` validasi format `628xxx`)
 - `profile_completion_score` dihitung server-side, gate route `/umkm/evidence` di backend (return 403) **dan** di FE
 
