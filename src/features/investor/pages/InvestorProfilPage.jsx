@@ -3,43 +3,13 @@ import { AnimatePresence } from 'framer-motion'
 import { Camera, Plus, Briefcase, Trash2, Save } from 'lucide-react'
 import PressButton from '@/components/ui/PressButton'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import { apiFetch } from '@/lib/utils'
 
-const INITIAL_FORM = {
-  nama: 'Arnold Prasetyo',
-  perusahaan: 'Mandiri Capital Indonesia',
-  jabatan: 'Principal',
-  lokasi: 'Jakarta, Indonesia',
-  tentang:
-    'Investor berpengalaman di sektor UMKM hijau dan ekonomi sirkular. Fokus pada bisnis dengan dampak lingkungan terukur dan model bisnis yang berkelanjutan.',
-  tiketMin: '50',
-  tiketMax: '500',
-  sektorFokus: ['Agrikultur', 'Energi Terbarukan', 'Kerajinan'],
-}
-
-const INITIAL_RIWAYAT = [
-  {
-    id: 1,
-    jabatan: 'Principal',
-    perusahaan: 'Mandiri Capital Indonesia',
-    periode: '2021 – Sekarang',
-  },
-  {
-    id: 2,
-    jabatan: 'Investment Analyst',
-    perusahaan: 'BRI Ventures',
-    periode: '2018 – 2021',
-  },
-]
+const BASE_API = import.meta.env.VITE_BASE_API
 
 const SEKTOR_OPTIONS = [
-  'Agrikultur',
-  'Energi Terbarukan',
-  'Kerajinan',
-  'Tekstil',
-  'Teknologi',
-  'Perikanan',
-  'Kehutanan',
-  'Pangan',
+  'Agrikultur', 'Energi Terbarukan', 'Kerajinan',
+  'Tekstil', 'Teknologi', 'Perikanan', 'Kehutanan', 'Pangan',
 ]
 
 const SectionLabel = ({ children }) => (
@@ -57,11 +27,49 @@ const inputCls =
   'w-full rounded-xl border border-[#e5e4e0] bg-white px-3.5 py-2.5 text-[0.88rem] text-[#111111] outline-none placeholder:text-[#b0aaa2] focus:border-[#205336] focus:ring-1 focus:ring-[#205336] transition-colors'
 
 const InvestorProfilPage = () => {
-  const [form, setForm] = React.useState(INITIAL_FORM)
-  const [riwayat, setRiwayat] = React.useState(INITIAL_RIWAYAT)
+  const [form, setForm] = React.useState({
+    nama: '', perusahaan: '', jabatan: '', lokasi: '',
+    tentang: '', tiketMin: '', tiketMax: '', sektorFokus: [],
+  })
+  const [riwayat, setRiwayat] = React.useState([])
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [avatarUrl, setAvatarUrl] = React.useState(null)
+  const [loading, setLoading] = React.useState(true)
   const fileInputRef = React.useRef(null)
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token') ?? ''
+    apiFetch(`${BASE_API}/investor/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json?.data) return
+        const d = json.data
+        const ip = d.investment_profile ?? {}
+        const ticketParts = ip.ticket_range?.split('-').map((s) => s.trim().replace(/[^0-9]/g, '')) ?? ['', '']
+        setForm({
+          nama: d.full_name ?? '',
+          perusahaan: d.company ?? '',
+          jabatan: d.title ?? '',
+          lokasi: d.base_location ?? '',
+          tentang: d.public_bio ?? '',
+          tiketMin: ticketParts[0] ?? '',
+          tiketMax: ticketParts[1] ?? '',
+          sektorFokus: ip.focus_sectors?.map((s) => s.sector_name) ?? [],
+        })
+        setRiwayat((d.positions ?? []).map((p) => ({
+          id: p.position_id,
+          jabatan: p.title,
+          perusahaan: p.institution_name,
+          periode: p.is_current
+            ? `${p.start_date?.slice(0, 7) ?? ''} – Sekarang`
+            : `${p.start_date?.slice(0, 7) ?? ''} – ${p.end_date?.slice(0, 7) ?? ''}`,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0]
@@ -71,9 +79,7 @@ const InvestorProfilPage = () => {
     reader.readAsDataURL(file)
   }
 
-  const isDirty =
-    JSON.stringify(form) !== JSON.stringify(INITIAL_FORM) ||
-    JSON.stringify(riwayat) !== JSON.stringify(INITIAL_RIWAYAT)
+  const isDirty = !loading
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
 
@@ -97,6 +103,14 @@ const InvestorProfilPage = () => {
     setRiwayat((r) =>
       r.map((x) => (x.id === id ? { ...x, [key]: e.target.value } : x)),
     )
+
+  if (loading) {
+    return (
+      <div className="px-8 py-12 text-center text-[0.88rem] text-[#8d877f]">
+        Memuat profil...
+      </div>
+    )
+  }
 
   return (
     <div className="px-8 py-8 sm:px-10 lg:px-12">

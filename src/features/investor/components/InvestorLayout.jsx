@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, FileText, Briefcase, User, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, FileText, Briefcase, User, ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 import primaryLogo from '@/assets/logo/primary-def.webp'
+import PressButton from '@/components/ui/PressButton'
 
 const NAV = [
   { label: 'Dashboard', href: '/investor/dashboard', icon: LayoutDashboard },
@@ -10,15 +11,15 @@ const NAV = [
   { label: 'Profil', href: '/investor/profil', icon: User },
 ]
 
-const mockUser = {
-  initials: 'AP',
-  name: 'Arnold Prasetyo',
-  role: 'Principal · EHV',
-  color: '#28557c',
-}
-
 export default function InvestorLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('reg_session_token')
+    navigate('/investor/login')
+  }
 
   return (
     <div className={`flex min-h-screen bg-[#f6f2ea] transition-all duration-300`}>
@@ -28,11 +29,11 @@ export default function InvestorLayout() {
         }`}
       >
         {/* Toggle */}
-        <button
-          className="absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#5f5a53] ring-1 ring-[#e5e4e0] transition-colors hover:text-[#111111]"
-          onClick={() => setCollapsed((c) => !c)}
-          type="button"
-        >
+          <button
+            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#5f5a53] ring-1 ring-[#e5e0d8] transition-colors hover:text-[#111111]"
+            onClick={() => setCollapsed((c) => !c)}
+            type="button"
+          >
           {collapsed ? (
             <ChevronRight className="h-3.5 w-3.5" />
           ) : (
@@ -85,27 +86,16 @@ export default function InvestorLayout() {
           </ul>
         </nav>
 
-        {/* User */}
-        <div
-          className={`border-t border-[#ece8df] py-4 ${collapsed ? 'flex justify-center px-2' : 'px-4'}`}
-        >
-          <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-            <div
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-xs font-bold text-white"
-              style={{ backgroundColor: mockUser.color }}
-              title={collapsed ? mockUser.name : undefined}
-            >
-              {mockUser.initials}
-            </div>
-            {!collapsed ? (
-              <div className="min-w-0">
-                <div className="truncate text-[0.82rem] font-semibold text-[#111111]">
-                  {mockUser.name}
-                </div>
-                <div className="text-[0.72rem] text-[#5f5a53]">{mockUser.role}</div>
-              </div>
-            ) : null}
-          </div>
+        {/* Logout */}
+        <div className="border-t border-[#ece8df] p-4">
+          <PressButton
+            variant="outline"
+            className="w-full !flex !items-center !justify-center !gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Keluar
+          </PressButton>
         </div>
       </aside>
 
@@ -114,14 +104,6 @@ export default function InvestorLayout() {
           collapsed ? 'ml-16' : 'ml-56'
         }`}
       >
-        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-[#ece8df] bg-[#f6f2ea]/95 px-8 py-3.5 backdrop-blur-sm sm:px-10 lg:px-12">
-          <Search className="h-4 w-4 shrink-0 text-[#9a9289]" />
-          <input
-            className="flex-1 bg-transparent text-[0.88rem] text-[#1d211b] outline-none placeholder:text-[#9a9289]"
-            placeholder="Cari UMKM, sektor, atau nomor proposa"
-            type="search"
-          />
-        </div>
         <Outlet />
       </main>
     </div>

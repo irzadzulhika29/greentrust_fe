@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Menu, X, ShieldCheck, Leaf } from 'lucide-react'
 import PressButton from '@/components/ui/PressButton'
+import { getAuthPayload } from '@/lib/utils'
 
 // Pages that have a hero section — navbar starts transparent on these
 // Value is the hero height as a fraction of viewport height
@@ -39,6 +40,10 @@ export const Navbar = () => {
   const heroFraction = getHeroFraction(location.pathname)
   const hasHero = heroFraction !== undefined
   const [scrolled, setScrolled] = React.useState(!hasHero)
+
+  const authPayload = getAuthPayload()
+  const isLoggedIn = !!authPayload
+  const dashboardHref = authPayload?.RoleName === 'investor' ? '/investor/dashboard' : '/umkm'
 
   React.useEffect(() => {
     if (!hasHero) return
@@ -86,25 +91,36 @@ export const Navbar = () => {
           {/* Desktop center nav links */}
           <div className="absolute inset-0 m-auto hidden size-fit lg:block">
             <ul className="flex gap-8 text-sm">
-              {menuItems.map((item) => (
-                <li key={item.name}>
-                  {item.isRoute ? (
-                    <Link
-                      to={item.href}
-                      className="text-white/80 hover:text-white block duration-150 font-medium"
-                    >
-                      {item.name}
-                    </Link>
-                  ) : (
-                    <a
-                      href={item.href}
-                      className="text-white/80 hover:text-white block duration-150 font-medium"
-                    >
-                      {item.name}
-                    </a>
-                  )}
-                </li>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = item.isRoute && (
+                  item.href === '/'
+                    ? location.pathname === '/'
+                    : location.pathname.startsWith(item.href)
+                )
+                return (
+                  <li key={item.name}>
+                    {item.isRoute ? (
+                      <Link
+                        to={item.href}
+                        className={`block duration-150 font-medium pb-1 border-b-2 transition-colors ${
+                          isActive
+                            ? 'text-white border-white'
+                            : 'text-white/80 hover:text-white border-transparent'
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={item.href}
+                        className="text-white/80 hover:text-white block duration-150 font-medium pb-1 border-b-2 border-transparent"
+                      >
+                        {item.name}
+                      </a>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </div>
 
@@ -145,13 +161,23 @@ export const Navbar = () => {
 
             {/* Auth buttons */}
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:w-fit">
-              <PressButton
-                variant="ghost"
-                onClick={() => navigate('/login')}
-                className="!bg-white/10 !text-white !border-white/30 hover:!bg-white/20"
-              >
-                Masuk atau Daftar
-              </PressButton>
+              {isLoggedIn ? (
+                <PressButton
+                  variant="ghost"
+                  onClick={() => navigate(dashboardHref)}
+                  className="!bg-white/10 !text-white !border-white/30 hover:!bg-white/20"
+                >
+                  Dashboard
+                </PressButton>
+              ) : (
+                <PressButton
+                  variant="ghost"
+                  onClick={() => navigate('/login')}
+                  className="!bg-white/10 !text-white !border-white/30 hover:!bg-white/20"
+                >
+                  Masuk atau Daftar
+                </PressButton>
+              )}
             </div>
           </div>
 

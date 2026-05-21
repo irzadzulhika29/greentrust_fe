@@ -6,7 +6,6 @@ const LoginForm = ({
   onSubmit,
   forgotLabel = 'Lupa?',
   submitLabel = 'Masuk',
-  secondaryLabel = 'Masuk dengan Google',
   submitting = false,
   error = null,
 }) => {
@@ -61,16 +60,6 @@ const LoginForm = ({
 
       <PressButton type="submit" variant="primary" className="h-10.5 w-full text-[0.9rem]" disabled={submitting}>
         {submitting ? 'Memproses...' : submitLabel}
-      </PressButton>
-
-      <div className="flex items-center gap-3 pt-0.5">
-        <div className="h-px flex-1 bg-[#ddd7cd]" />
-        <span className="text-[0.7rem] font-medium text-[#8d877f]">Atau</span>
-        <div className="h-px flex-1 bg-[#ddd7cd]" />
-      </div>
-
-      <PressButton type="button" variant="ghost" className="h-10.5 w-full text-[0.88rem] font-medium">
-        {secondaryLabel}
       </PressButton>
     </form>
   )

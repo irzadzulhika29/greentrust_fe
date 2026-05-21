@@ -1,8 +1,8 @@
 import React from 'react'
-import { Download, FileText, X } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Download, FileText, X, Inbox, SendHorizonal, CheckCheck, XCircle, FileText as FileDraft } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import PressButton from '@/components/ui/PressButton'
-import { apiFetch } from '@/lib/utils'
+import { apiFetch, proposalAction } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
 
@@ -132,20 +132,13 @@ function RejectModal({ proposal, onClose, onSubmit }) {
   )
 }
 
-const TAB_PARAMS = {
-  incoming: { box: 'inbox', status: 'sent' },
-  sent:     { box: 'sent' },
-  approved: { box: 'inbox', status: 'accepted' },
-  rejected: { box: 'inbox', status: 'rejected' },
-  all:      {},
-}
-
 const TABS = [
-  { key: 'incoming', label: 'Masuk' },
-  { key: 'sent', label: 'Terkirim' },
-  { key: 'approved', label: 'Disetujui' },
-  { key: 'rejected', label: 'Ditolak' },
-  { key: 'all', label: 'Semua' },
+  { key: 'incoming', label: 'Masuk', icon: Inbox },
+  { key: 'draft', label: 'Draft', icon: FileDraft },
+  { key: 'sent', label: 'Terkirim', icon: SendHorizonal },
+  { key: 'approved', label: 'Disetujui', icon: CheckCheck },
+  { key: 'rejected', label: 'Ditolak', icon: XCircle },
+  { key: 'all', label: 'Semua', icon: FileText },
 ]
 
 const TYPE_STYLES = {
@@ -180,26 +173,103 @@ const formatBytes = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+const ProposalActions = ({ proposalId, onStatusChange }) => {
+  const [actioning, setActioning] = React.useState(null)
+  const [actionError, setActionError] = React.useState(null)
+
+  const handleAction = async (action) => {
+    setActioning(action)
+    setActionError(null)
+    try {
+      const updated = await proposalAction(proposalId, action)
+      onStatusChange?.(updated)
+    } catch (err) {
+      setActionError(err.message ?? 'Gagal. Coba lagi.')
+    } finally {
+      setActioning(null)
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      {actionError && <p className="text-[0.72rem] text-red-600">{actionError}</p>}
+      <div className="grid grid-cols-2 gap-2">
+        <PressButton
+          variant="danger"
+          className="w-full !justify-center !text-xs"
+          disabled={!!actioning}
+          onClick={() => handleAction('reject')}
+        >
+          {actioning === 'reject' ? 'Menolak...' : '× Tolak'}
+        </PressButton>
+        <PressButton
+          variant="primary"
+          className="w-full !justify-center !text-xs"
+          disabled={!!actioning}
+          onClick={() => handleAction('accept')}
+        >
+          {actioning === 'accept' ? 'Menyetujui...' : '✓ Setujui'}
+        </PressButton>
+      </div>
+    </div>
+  )
+}
+
 const UmkmProposalPage = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = React.useState('incoming')
+  const [activeTab, setActiveTab] = React.useState('draft')
   const [sort, setSort] = React.useState('newest')
   const [rejectModal, setRejectModal] = React.useState(null)
   const [proposals, setProposals] = React.useState([])
+  const [summary, setSummary] = React.useState(null)
+  const [tabs, setTabs] = React.useState({})
+  const [draftCount, setDraftCount] = React.useState(0)
+  const [sentCount, setSentCount] = React.useState(0)
   const [loading, setLoading] = React.useState(true)
   const [fetchError, setFetchError] = React.useState(null)
 
+  // Fetch summary once from 'all' tab for accurate KPI cards
   React.useEffect(() => {
     const token = localStorage.getItem('auth_token') ?? ''
-    const params = TAB_PARAMS[activeTab] ?? {}
-    const query = new URLSearchParams(params).toString()
-    const url = `${BASE_API}/proposals${query ? `?${query}` : ''}`
-
-    apiFetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${BASE_API}/umkm/proposals?tab=all&sort=newest`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((r) => r.json())
       .then((json) => {
         if (json?.status?.isSuccess) {
-          setProposals(json.data ?? [])
+          setSummary(json.data?.summary ?? null)
+          setTabs(json.data?.tabs ?? {})
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token') ?? ''
+    // draft tab maps to sent on API, filter client-side
+    const apiTab = activeTab === 'draft' ? 'sent' : activeTab
+    const url = `${BASE_API}/umkm/proposals?tab=${apiTab}&sort=${sort}`
+
+    apiFetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => {
+        setLoading(true)
+        return r.json()
+      })
+      .then((json) => {
+        if (json?.status?.isSuccess) {
+          const items = json.data?.items ?? []
+          // filter client-side for draft/sent split
+          const filtered = activeTab === 'draft'
+            ? items.filter((p) => p.status === 'draft')
+            : activeTab === 'sent'
+            ? items.filter((p) => p.status !== 'draft')
+            : items
+          setProposals(filtered)
+          // compute accurate counts when fetching sent tab
+          if (activeTab === 'draft' || activeTab === 'sent') {
+            setDraftCount(items.filter((p) => p.status === 'draft').length)
+            setSentCount(items.filter((p) => p.status !== 'draft').length)
+          }
           setFetchError(null)
         } else {
           throw new Error(json?.message ?? 'Gagal memuat proposal')
@@ -210,7 +280,7 @@ const UmkmProposalPage = () => {
         setProposals([])
       })
       .finally(() => setLoading(false))
-  }, [activeTab])
+  }, [activeTab, sort])
 
   return (
     <div className="px-8 py-8">
@@ -227,11 +297,10 @@ const UmkmProposalPage = () => {
         <div>
           <h1 className="text-3xl font-semibold text-[#111111]">Proposal & Penawaran</h1>
           <p className="mt-1 text-sm text-[#5f5a53]">
-            3 proposal masuk butuh ditinjau. Anda juga bisa mengirim proposal pendanaan ke investor dari direktori.
+            {loading ? 'Memuat data...' : `${summary?.incoming_offers_count ?? 0} proposal masuk butuh ditinjau. Anda juga bisa mengirim proposal pendanaan ke investor dari direktori.`}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <PressButton variant="ghost">Riwayat</PressButton>
           <PressButton variant="secondary" className="!flex !items-center !gap-2" onClick={() => navigate('/umkm/proposal/baru')}>
             <span>+</span>
             Ajukan Proposal Baru
@@ -242,10 +311,10 @@ const UmkmProposalPage = () => {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
-          { label: 'Penawaran Masuk', value: '3', sub: 'butuh tinjauan', highlight: true },
-          { label: 'Proposal Terkirim', value: '2', sub: '1 ditolak, 1 disetujui' },
-          { label: 'Total Nilai Pending', value: 'Rp 1.05 M', sub: 'jika semua approved', large: true },
-          { label: 'Response Rate', value: '94%', sub: 'rata-rata 2.4 hari', green: true },
+          { label: 'Penawaran Masuk', value: loading ? '—' : summary?.incoming_offers_count ?? 0, sub: 'butuh tinjauan', highlight: true },
+          { label: 'Proposal Terkirim', value: loading ? '—' : summary?.sent_proposals_count ?? 0, sub: `${summary?.sent_rejected_count ?? 0} ditolak, ${summary?.sent_approved_count ?? 0} disetujui` },
+          { label: 'Total Nilai Pending', value: loading ? '—' : (summary?.pending_total_value ? `Rp ${Number(summary.pending_total_value).toLocaleString('id-ID')}` : 'Rp 0'), sub: 'jika semua approved', large: true },
+          { label: 'Response Rate', value: loading ? '—' : (summary?.response_rate != null ? `${summary.response_rate}%` : '—'), sub: summary?.response_rate_label ?? '', green: true },
         ].map((stat) => (
           <div key={stat.label} className="rounded-2xl border border-[#e5e4e0] bg-white p-5 shadow-[0_4px_12px_rgba(17,17,17,0.04)]">
             <div className="text-[10px] font-semibold uppercase tracking-widest text-[#8d877f] mb-3">{stat.label}</div>
@@ -261,32 +330,35 @@ const UmkmProposalPage = () => {
 
       {/* Tabs + sort */}
       <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-1 rounded-xl border border-[#e5e4e0] bg-white p-1 w-fit">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150 ${
-                activeTab === tab.key
-                  ? 'bg-[#111111] text-white'
-                  : 'text-[#5f5a53] hover:text-[#111111]'
-              }`}
-            >
-              {tab.key === 'incoming' && '🧑‍💼 '}
-              {tab.key === 'sent' && '📤 '}
-              {tab.key === 'approved' && '✓ '}
-              {tab.key === 'rejected' && '× '}
-              {tab.label}
-              {tab.count > 0 && (
-                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
-                  activeTab === tab.key ? 'bg-white text-[#111111]' : 'bg-[#e5e4e0] text-[#5f5a53]'
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+        <div className="flex w-fit items-center gap-0.5 rounded-xl bg-[#ece8df] p-1">
+          {TABS.map((tab) => {
+            const Icon = tab.icon
+            const active = activeTab === tab.key
+            let count
+            if (tab.key === 'draft') count = draftCount
+            else if (tab.key === 'sent') count = sentCount
+            else count = tabs[tab.key] ?? 0
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-[0.82rem] font-semibold transition-colors duration-150 ${
+                  active ? 'bg-[#111111] text-white' : 'text-[#5f5a53] hover:text-[#111111]'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+                {count > 0 && (
+                  <span className={`flex min-w-4.5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold ${
+                    active ? 'bg-white text-[#111111]' : 'bg-[#ddd7cd] text-[#5f5a53]'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
         <div className="relative">
@@ -335,7 +407,7 @@ const UmkmProposalPage = () => {
                   </div>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-[#f4f3ec] text-[#5f5a53]'}`}>
-                  ● {STATUS_LABEL[p.status] ?? p.status}
+                  ● {p.status_label ?? STATUS_LABEL[p.status] ?? p.status}
                 </span>
               </div>
               <div className="px-6 pb-1 text-[10px] text-[#8d877f]">
@@ -345,7 +417,11 @@ const UmkmProposalPage = () => {
               {/* Card body */}
               <div className="grid gap-6 px-6 pb-6 pt-4 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div>
-                  <h3 className="text-xl font-semibold text-[#111111] mb-2">{p.title}</h3>
+                  <h3 className="text-xl font-semibold text-[#111111] mb-2">
+                    <Link to={`/umkm/proposal/${p.proposal_id}`} className="hover:text-[#205336] transition-colors">
+                      {p.title}
+                    </Link>
+                  </h3>
                   <p className="text-sm text-[#5f5a53] leading-relaxed mb-4">{p.message}</p>
                   {firstAttachment && (
                     <div className="flex items-center gap-3 rounded-xl border border-[#e5e4e0] bg-[#f4f3ec] px-4 py-3 w-fit">
@@ -376,11 +452,16 @@ const UmkmProposalPage = () => {
                       {p.scheme ? ` · ${p.scheme}` : ''}
                     </div>
                   </div>
+                  <Link
+                    to={`/umkm/proposal/${p.proposal_id}`}
+                    className="inline-flex h-9 w-full items-center justify-center rounded-xl border border-[#e5e4e0] bg-white text-[0.82rem] font-semibold text-[#5f5a53] transition hover:border-[#205336] hover:text-[#205336]"
+                  >
+                    Lihat Detail
+                  </Link>
                   {p.status === 'sent' && p.receiver_role === 'umkm' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <PressButton variant="danger" className="w-full !justify-center !text-xs" onClick={() => setRejectModal({ ...p, fromInitials: initials, from: counterparty.name, ref: p.proposal_id.slice(0, 8).toUpperCase(), nilai: formatRupiah(p.amount) })}>× Tolak</PressButton>
-                      <PressButton variant="primary" className="w-full !justify-center !text-xs">✓ Setujui</PressButton>
-                    </div>
+                    <ProposalActions proposalId={p.proposal_id} onStatusChange={(updated) => {
+                      setProposals((prev) => prev.map((item) => item.proposal_id === updated.proposal_id ? updated : item))
+                    }} />
                   )}
                 </div>
               </div>

@@ -1,9 +1,13 @@
 import { ArrowRight, Diamond, CircleDot, Circle, LayoutGrid } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/ui/navbar';
 import { UmkmCard } from '@/components/ui/card-umkm';
 import PressButton from '@/components/ui/PressButton';
 import Grainient from '@/components/ui/Grainient';
-import { publicUmkmList } from '@/features/public/data/publicUmkmData';
+import { apiFetch } from '@/lib/utils';
+
+const BASE_API = import.meta.env.VITE_BASE_API;
 
 const heroStats = [
   { value: '128', label: 'Green Passport aktif', sub: 'di 23 kota Indonesia' },
@@ -13,6 +17,22 @@ const heroStats = [
 ];
 
 const LandingPage = () => {
+  const navigate = useNavigate()
+  const [umkmList, setUmkmList] = useState([])
+  const [totalUmkm, setTotalUmkm] = useState(0)
+
+  useEffect(() => {
+    apiFetch(`${BASE_API}/umkms?sort=grs_desc&limit=4`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) {
+          setUmkmList((json.data.items ?? []).slice(0, 4))
+          setTotalUmkm(json.data.meta?.total ?? 0)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="min-h-screen bg-white text-[#111111]">
       <Navbar />
@@ -131,25 +151,23 @@ const LandingPage = () => {
         <div className="mt-24 animate-element animate-delay-400">
           <div className="mb-8 flex items-center justify-between">
             <h2 className="text-4xl font-semibold text-[#111111]">Yang sudah membuktikan diri.</h2>
-            <PressButton variant="outline-orange" onClick={() => {}}>
-              <span className="flex items-center gap-2">Lihat Semua 128 <ArrowRight className="h-4 w-4" /></span>
+            <PressButton variant="outline-orange" onClick={() => navigate('/direktori')}>
+              <span className="flex items-center gap-2">Lihat Semua {totalUmkm > 0 ? totalUmkm : ''} <ArrowRight className="h-4 w-4" /></span>
             </PressButton>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {publicUmkmList.map((umkm) => (
+            {umkmList.map((umkm) => (
               <UmkmCard
-                key={umkm.name}
-                imageUrl={umkm.imageUrl}
-                name={umkm.name}
-                category={umkm.category}
+                key={umkm.profile_id}
+                imageUrl={umkm.photo_url}
+                name={umkm.business_name}
+                category={umkm.sector_name}
                 city={umkm.city}
-                grs={umkm.grs}
-                tier={umkm.tier}
-                since={umkm.since}
-                employees={umkm.employees}
-                themeColor={umkm.themeColor}
-                href={`/passport/${umkm.slug}`}
+                grs={umkm.grs_score}
+                tier={umkm.tier_label}
+                desc={umkm.description}
+                href={`/passport/${umkm.profile_id}`}
                 className="h-full"
               />
             ))}

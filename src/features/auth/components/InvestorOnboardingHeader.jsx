@@ -17,9 +17,6 @@ const InvestorOnboardingHeader = ({ step, onExit }) => {
               <div className="text-[1.02rem] font-semibold leading-none text-[#205336]">
                 GreenTrust <span className="text-[#4a4a46]">Passport</span>
               </div>
-              <div className="mt-1 text-[0.56rem] font-semibold leading-none text-[#7d786f]">
-                Republik Indonesia · MVP
-              </div>
             </div>
           </div>
 

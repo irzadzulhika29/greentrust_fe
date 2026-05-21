@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import InvestorOnboardingCareerStep from '@/features/auth/components/InvestorOnboardingCareerStep'
 import InvestorOnboardingHeader from '@/features/auth/components/InvestorOnboardingHeader'
 import InvestorOnboardingIdentityStep from '@/features/auth/components/InvestorOnboardingIdentityStep'
+import { apiFetch } from '@/lib/utils'
+
+const BASE_API = import.meta.env.VITE_BASE_API
 
 const initialIdentityForm = {
   firstName: 'Arnold',
@@ -81,6 +84,9 @@ const InvestorOnboardingPage = () => {
   const [showComplete, setShowComplete] = useState(false)
   const [identityForm, setIdentityForm] = useState(initialIdentityForm)
   const [careerForm, setCareerForm] = useState(initialCareerForm)
+  const [ktpFile, setKtpFile] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
 
   const handleIdentityChange = (field, value) => {
     setIdentityForm((current) => ({ ...current, [field]: value }))
@@ -97,6 +103,79 @@ const InvestorOnboardingPage = () => {
         ? current.skillTags.filter((item) => item !== skill)
         : [...current.skillTags, skill],
     }))
+  }
+
+  const handleIdentityNext = async () => {
+    setSubmitError(null)
+    setSubmitting(true)
+    const token = localStorage.getItem('reg_session_token') ?? ''
+    try {
+      const body = new FormData()
+      if (ktpFile) body.append('ktp_file', ktpFile)
+      body.append('first_name', identityForm.firstName)
+      body.append('last_name', identityForm.lastName)
+      body.append('nik', identityForm.nikMasked.replace(/\s/g, ''))
+      body.append('birth_place', identityForm.birthPlace)
+      body.append('birth_date', identityForm.birthDate)
+      body.append('address', identityForm.address ?? '')
+      body.append('province', identityForm.province ?? '')
+      body.append('city', identityForm.city ?? '')
+      body.append('phone_number', identityForm.phone)
+      body.append('email_contact', identityForm.notificationEmail)
+      body.append('is_confirmed', 'true')
+
+      const res = await apiFetch(`${BASE_API}/onboarding/identity`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token },
+        body,
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.message ?? `Error ${res.status}`)
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+      setStep(2)
+    } catch (err) {
+      setSubmitError(err.message ?? 'Gagal menyimpan identitas. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCareerNext = async () => {
+    setSubmitError(null)
+    setSubmitting(true)
+    const token = localStorage.getItem('reg_session_token') ?? ''
+    try {
+      const res = await apiFetch(`${BASE_API}/onboarding/investor/positions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token,
+        },
+        body: JSON.stringify({
+          title: careerForm.roleTitle,
+          institution_name: careerForm.institutionName,
+          employment_type: careerForm.workType?.toLowerCase().replace('-', '_') ?? 'full_time',
+          location: careerForm.location,
+          start_date: careerForm.startDate,
+          end_date: careerForm.isCurrent ? '' : careerForm.endDate,
+          is_current: careerForm.isCurrent,
+          description: careerForm.achievementSummary,
+          skills: careerForm.skillTags,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.message ?? `Error ${res.status}`)
+      if (json?.data?.session_token) {
+        localStorage.setItem('reg_session_token', json.data.session_token)
+      }
+      handleComplete()
+    } catch (err) {
+      setSubmitError(err.message ?? 'Gagal menyimpan profil. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleComplete = () => {
@@ -119,12 +198,19 @@ const InvestorOnboardingPage = () => {
         <main className="mx-auto flex w-full max-w-350 flex-1 flex-col px-8 py-8 sm:px-12 lg:px-16">
           <div className="flex min-h-0 flex-1 flex-col">
             {step === 1 ? (
-              <InvestorOnboardingIdentityStep
-                onBack={() => navigate('/investor/register')}
-                onChange={handleIdentityChange}
-                onNext={() => setStep(2)}
-                values={identityForm}
-              />
+              <>
+                {submitError && (
+                  <p className="mb-3 text-[0.82rem] text-red-600">{submitError}</p>
+                )}
+                <InvestorOnboardingIdentityStep
+                  onBack={() => navigate('/investor/register')}
+                  onChange={handleIdentityChange}
+                  onKtpFileChange={setKtpFile}
+                  onNext={handleIdentityNext}
+                  submitting={submitting}
+                  values={identityForm}
+                />
+              </>
             ) : null}
 
             {step === 2 ? (
@@ -132,8 +218,10 @@ const InvestorOnboardingPage = () => {
                 identityValues={identityForm}
                 onBack={() => setStep(1)}
                 onChange={handleCareerChange}
-                onNext={handleComplete}
+                onNext={handleCareerNext}
                 onToggleSkill={handleSkillToggle}
+                submitError={submitError}
+                submitting={submitting}
                 values={careerForm}
               />
             ) : null}

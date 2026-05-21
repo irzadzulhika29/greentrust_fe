@@ -1,119 +1,139 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Info, Loader2, Plus, X } from 'lucide-react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Info,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react";
+import { Link, Navigate, useParams } from "react-router-dom";
 import {
   categories,
   findEvidenceIndicatorBySlug,
   getIndicatorHref,
-} from '@/features/umkm/data/evidenceVaultData'
-import { apiFetch } from '@/lib/utils'
+} from "@/features/umkm/data/evidenceVaultData";
+import { apiFetch } from "@/lib/utils";
 
-const N8N_URL = import.meta.env.VITE_N8N_URL
-const BASE_API = import.meta.env.VITE_BASE_API
+const N8N_URL = import.meta.env.VITE_N8N_URL;
+const BASE_API = import.meta.env.VITE_BASE_API;
 
 const formatBytes = (bytes) => {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
-const getFileExt = (name) => name.split('.').pop().toUpperCase().slice(0, 4)
+const getFileExt = (name) => name.split(".").pop().toUpperCase().slice(0, 4);
 
-const ACCEPTED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
-const MAX_BYTES = 10 * 1024 * 1024
+const ACCEPTED_MIME = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+];
+const MAX_BYTES = 10 * 1024 * 1024;
 
-const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClose }) => {
-  const fileInputRef = useRef(null)
-  const [files, setFiles] = useState([])
-  const [isDragging, setIsDragging] = useState(false)
-  const [submitState, setSubmitState] = useState('idle') // idle | loading | success | error
-  const [errorMsg, setErrorMsg] = useState('')
+const UploadDocumentModal = ({
+  indicator,
+  requirementId,
+  requirementName,
+  onClose,
+}) => {
+  const fileInputRef = useRef(null);
+  const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [submitState, setSubmitState] = useState("idle"); // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
+      if (event.key === "Escape") {
+        onClose();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onClose])
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
 
   const addFiles = useCallback((incoming) => {
     const valid = Array.from(incoming).filter((f) => {
-      if (!ACCEPTED_MIME.includes(f.type)) return false
-      if (f.size > MAX_BYTES) return false
-      return true
-    })
+      if (!ACCEPTED_MIME.includes(f.type)) return false;
+      if (f.size > MAX_BYTES) return false;
+      return true;
+    });
     setFiles((prev) => {
-      const existing = new Set(prev.map((f) => f.name + f.size))
-      return [...prev, ...valid.filter((f) => !existing.has(f.name + f.size))]
-    })
-  }, [])
+      const existing = new Set(prev.map((f) => f.name + f.size));
+      return [...prev, ...valid.filter((f) => !existing.has(f.name + f.size))];
+    });
+  }, []);
 
   const removeFile = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
-  }
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
-    setIsDragging(false)
-    addFiles(e.dataTransfer.files)
-  }
+    e.preventDefault();
+    setIsDragging(false);
+    addFiles(e.dataTransfer.files);
+  };
 
   const handleDragOver = (e) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
-  const handleDragLeave = () => setIsDragging(false)
+  const handleDragLeave = () => setIsDragging(false);
 
   const handleFileInput = (e) => {
-    addFiles(e.target.files)
-    e.target.value = ''
-  }
+    addFiles(e.target.files);
+    e.target.value = "";
+  };
 
   const handleSubmit = async () => {
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setSubmitState('loading')
-    setErrorMsg('')
+    setSubmitState("loading");
+    setErrorMsg("");
 
     try {
-      const token = localStorage.getItem('auth_token') ?? ''
+      const token = localStorage.getItem("auth_token") ?? "";
       const requests = files.map((file) => {
-        const formData = new FormData()
-        formData.append('document', file)
-        formData.append('requirement_id', requirementId)
+        const formData = new FormData();
+        formData.append("document", file);
+        formData.append("requirement_id", requirementId);
 
         return apiFetch(`${N8N_URL}/evidence-docs`, {
-          method: 'POST',
+          method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
-        })
-      })
+        });
+      });
 
-      const results = await Promise.all(requests)
-      const failed = results.filter((r) => !r.ok)
+      const results = await Promise.all(requests);
+      const failed = results.filter((r) => !r.ok);
 
       if (failed.length > 0) {
-        throw new Error(`${failed.length} file gagal dikirim (status ${failed[0].status})`)
+        throw new Error(
+          `${failed.length} file gagal dikirim (status ${failed[0].status})`,
+        );
       }
 
-      setSubmitState('success')
+      setSubmitState("success");
     } catch (err) {
-      setSubmitState('error')
-      setErrorMsg(err.message ?? 'Terjadi kesalahan saat mengirim file.')
+      setSubmitState("error");
+      setErrorMsg(err.message ?? "Terjadi kesalahan saat mengirim file.");
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1d1c19]/45 px-4 py-6">
@@ -156,15 +176,16 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
             onDragLeave={handleDragLeave}
             className={`flex min-h-[158px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-5 text-center transition ${
               isDragging
-                ? 'border-[#236041] bg-[#eef6f0]'
-                : 'border-[#d9e2da] bg-[#f8f5ef] hover:border-[#236041] hover:bg-[#f2f8f3]'
+                ? "border-[#236041] bg-[#eef6f0]"
+                : "border-[#d9e2da] bg-[#f8f5ef] hover:border-[#236041] hover:bg-[#f2f8f3]"
             }`}
           >
             <div className="text-[2.2rem]" aria-hidden="true">
               📂
             </div>
             <div className="mt-3 text-[1.2rem] font-bold leading-tight tracking-[-0.05em] text-[#20201c]">
-              Tarik file ke sini, atau <span className="text-[#236041]">jelajah dari komputer</span>
+              Tarik file ke sini, atau{" "}
+              <span className="text-[#236041]">jelajah dari komputer</span>
             </div>
             <div className="mt-2 text-[0.82rem] font-semibold uppercase text-[#8d877f]">
               PDF • JPG • PNG • maks 10 MB per file
@@ -209,7 +230,7 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
                       </div>
                     </div>
 
-                    {submitState === 'success' ? (
+                    {submitState === "success" ? (
                       <div className="rounded-full border border-[#c8dfca] bg-[#dcebdc] px-3 py-1.5 text-[0.82rem] font-bold text-[#4f8b5e]">
                         ✓ terkirim
                       </div>
@@ -217,7 +238,7 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        disabled={submitState === 'loading'}
+                        disabled={submitState === "loading"}
                         className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#8a857d] transition hover:bg-[#f4f1ea] hover:text-[#20201c] disabled:opacity-40"
                         aria-label={`Hapus ${file.name}`}
                       >
@@ -231,7 +252,7 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
           )}
 
           {/* Error banner */}
-          {submitState === 'error' && (
+          {submitState === "error" && (
             <div className="flex items-start gap-3 rounded-[16px] border border-[#f5cfc9] bg-[#fff4f2] px-4 py-3 text-[#8b3a2e]">
               <Info className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-[0.88rem] font-normal leading-5">{errorMsg}</p>
@@ -239,22 +260,23 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
           )}
 
           {/* Success banner */}
-          {submitState === 'success' && (
+          {submitState === "success" && (
             <div className="flex items-start gap-3 rounded-[16px] border border-[#c8dfca] bg-[#eef6f0] px-4 py-3 text-[#2d6644]">
               <Check className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-[0.88rem] font-normal leading-5">
-                File berhasil dikirim ke pipeline AI. Pemrosesan berjalan di latar belakang.
+                File berhasil dikirim ke pipeline AI. Pemrosesan berjalan di
+                latar belakang.
               </p>
             </div>
           )}
 
           {/* Info banner — only when idle/error */}
-          {submitState !== 'success' && (
+          {submitState !== "success" && (
             <div className="flex items-start gap-3 rounded-[16px] border border-[#cfe0f0] bg-[#eef6ff] px-4 py-3 text-[#4b5d6f]">
               <Info className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-[0.88rem] font-normal leading-5">
-                Anda bisa menutup jendela ini — pemrosesan berjalan di latar belakang. Notifikasi
-                muncul saat semua file siap direview.
+                Anda bisa menutup jendela ini — pemrosesan berjalan di latar
+                belakang. Notifikasi muncul saat semua file siap direview.
               </p>
             </div>
           )}
@@ -268,7 +290,7 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
               Tutup
             </button>
 
-            {submitState === 'success' ? (
+            {submitState === "success" ? (
               <button
                 type="button"
                 onClick={onClose}
@@ -281,10 +303,10 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={files.length === 0 || submitState === 'loading'}
+                disabled={files.length === 0 || submitState === "loading"}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#20201c] bg-[#20201c] px-7 text-[0.95rem] font-bold text-white transition hover:bg-[#11110f] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {submitState === 'loading' ? (
+                {submitState === "loading" ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Mengirim...
@@ -301,46 +323,48 @@ const UploadDocumentModal = ({ indicator, requirementId, requirementName, onClos
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const EvidenceIndicatorDetailPage = () => {
-  const { indicatorCode } = useParams()
-  const indicator = findEvidenceIndicatorBySlug(indicatorCode)
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [selectedRequirement, setSelectedRequirement] = useState(null)
-  const [categoryDetail, setCategoryDetail] = useState(null)
-  const [loadingDetail, setLoadingDetail] = useState(true)
+  const { indicatorCode } = useParams();
+  const indicator = findEvidenceIndicatorBySlug(indicatorCode);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedRequirement, setSelectedRequirement] = useState(null);
+  const [categoryDetail, setCategoryDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(true);
 
   useEffect(() => {
-    if (!indicator) return
-    const token = localStorage.getItem('auth_token') ?? ''
+    if (!indicator) return;
+    const token = localStorage.getItem("auth_token") ?? "";
     apiFetch(`${BASE_API}/evidence/categories/${indicator.code}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then((json) => {
-        if (json?.data) setCategoryDetail(json.data)
+        if (json?.data) setCategoryDetail(json.data);
       })
       .catch(() => {})
-      .finally(() => setLoadingDetail(false))
-  }, [indicator])
+      .finally(() => setLoadingDetail(false));
+  }, [indicator]);
 
   if (!indicator) {
-    return <Navigate to="/umkm/evidence" replace />
+    return <Navigate to="/umkm/evidence" replace />;
   }
 
   const nextPriorityItems = indicator.nextPriority
     .map((item) => {
-      const linkedCategory = categories.find((category) => category.code === item.code)
+      const linkedCategory = categories.find(
+        (category) => category.code === item.code,
+      );
 
-      return linkedCategory ? { ...item, ...linkedCategory } : null
+      return linkedCategory ? { ...item, ...linkedCategory } : null;
     })
-    .filter(Boolean)
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#20201c]">
-      <header className="border-b border-[#e7e1d8]">
+      <header>
         <div className="px-6 py-5 lg:px-12">
           <div className="mb-5">
             <Link
@@ -374,15 +398,17 @@ const EvidenceIndicatorDetailPage = () => {
                   Daftar Dokumen Yang Dibutuhkan
                 </div>
                 <div className="mt-2 text-[1.95rem] leading-none tracking-[-0.05em] text-[#181816]">
-                  {loadingDetail ? '—' : `${categoryDetail?.category?.fulfilled_count ?? 0} dari ${categoryDetail?.category?.required_count ?? 0} terpenuhi`}
+                  {loadingDetail
+                    ? "—"
+                    : `${categoryDetail?.category?.fulfilled_count ?? 0} dari ${categoryDetail?.category?.required_count ?? 0} terpenuhi`}
                 </div>
               </div>
 
               <div
                 className="grid h-[81px] w-[81px] place-items-center rounded-full border-[6px] bg-white text-lg font-bold"
-                style={{ borderColor: indicator.color, color: '#181816' }}
+                style={{ borderColor: indicator.color, color: "#181816" }}
               >
-                {loadingDetail ? '—' : (categoryDetail?.category?.score ?? 0)}
+                {loadingDetail ? "—" : (categoryDetail?.category?.score ?? 0)}
               </div>
             </div>
 
@@ -392,123 +418,116 @@ const EvidenceIndicatorDetailPage = () => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Memuat...
                 </div>
-              ) : (categoryDetail?.requirements ?? []).map((req) => {
-                const fulfilled = (categoryDetail?.documents ?? []).some(
-                  (d) => d.requirement_id === req.requirement_id && d.status !== 'rejected'
-                )
-                return (
-                  <div
-                    key={req.requirement_id}
-                    className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div
-                        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${
-                          fulfilled ? 'bg-[#236041] text-white' : 'bg-[#f4f1ea] text-[#8d877f]'
-                        }`}
-                      >
-                        {fulfilled ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[1rem] font-bold leading-tight text-[#20201c]">{req.name}</div>
-                        <div className="mt-1 text-[0.9rem] font-normal text-[#8a857d]">{req.description}</div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!fulfilled) {
-                          setSelectedRequirement({ id: req.requirement_id, name: req.name })
-                          setIsUploadModalOpen(true)
-                        }
-                      }}
-                      className="inline-flex shrink-0 items-center gap-2 text-[0.95rem] font-bold transition"
-                      style={{ color: indicator.color }}
+              ) : (
+                (categoryDetail?.requirements ?? []).map((req) => {
+                  const fulfilled = (categoryDetail?.documents ?? []).some(
+                    (d) =>
+                      d.requirement_id === req.requirement_id &&
+                      d.status !== "rejected",
+                  );
+                  return (
+                    <div
+                      key={req.requirement_id}
+                      className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
                     >
-                      {fulfilled ? 'Lihat' : 'Unggah'}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                )
-              })}
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div
+                          className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${
+                            fulfilled
+                              ? "bg-[#236041] text-white"
+                              : "bg-[#f4f1ea] text-[#8d877f]"
+                          }`}
+                        >
+                          {fulfilled ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[1rem] font-bold leading-tight text-[#20201c]">
+                            {req.name}
+                          </div>
+                          <div className="mt-1 text-[0.9rem] font-normal text-[#8a857d]">
+                            {req.description}
+                          </div>
+                        </div>
+                      </div>
+
+                      {fulfilled ? (
+                        <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#236041] text-white">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRequirement({
+                              id: req.requirement_id,
+                              name: req.name,
+                            });
+                            setIsUploadModalOpen(true);
+                          }}
+                          className="inline-flex shrink-0 items-center gap-2 text-[0.95rem] font-bold transition"
+                          style={{ color: indicator.color }}
+                        >
+                          Unggah
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
 
-          <section className="rounded-[18px] border border-[#ddd6ca] bg-[#f4fbf6] p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd6ca] bg-white px-3 py-1 text-[0.72rem] font-bold uppercase text-[#4f8b5e]">
-              <Plus className="h-3 w-3" />
-              AI Gap Analyzer
-            </div>
-
-            <h2 className="mt-5 text-[1.7rem] leading-[1.1] tracking-[-0.05em] text-[#181816]">
-              {indicator.aiInsightTitle}
-            </h2>
-            <p className="mt-4 text-[1rem] font-normal leading-7 text-[#5f5a53]">{indicator.aiInsightBody}</p>
-
-            <div className="mt-6 space-y-3">
-              {indicator.aiRecommendations.map((recommendation) => (
-                <div
-                  key={recommendation.title}
-                  className="flex items-center justify-between gap-4 rounded-[16px] border border-[#ddd6ca] bg-white px-4 py-4"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div className="mt-0.5 text-[1rem] font-bold text-[#4f8b5e]">+</div>
-                    <div className="min-w-0">
-                      <div className="text-[1rem] font-bold leading-tight text-[#20201c]">
-                        {recommendation.title}
-                      </div>
-                      <div className="mt-1 text-[0.9rem] font-normal text-[#8a857d]">{recommendation.note}</div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsUploadModalOpen(true)}
-                    className="inline-flex shrink-0 items-center gap-1 text-[0.92rem] font-bold text-[#4f8b5e]"
-                  >
-                    Unggah
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+          <section className="rounded-[18px]">
+            <div className="space-y-6">
+              <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
+                <div className="text-[0.68rem] font-semibold uppercase text-[#8d877f]">
+                  Kategori Prioritas Berikutnya
                 </div>
-              ))}
+
+                <div className="mt-4 space-y-1">
+                  {nextPriorityItems.map((item) => (
+                    <Link
+                      key={item.code}
+                      to={getIndicatorHref(item.slug)}
+                      className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
+                    >
+                      <div className="flex min-w-0 items-start gap-4">
+                        <div
+                          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[0.95rem] font-bold"
+                          style={{
+                            backgroundColor: item.tint,
+                            color: item.color,
+                          }}
+                        >
+                          {item.code}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[1rem] font-bold leading-tight text-[#20201c]">
+                            {item.title}
+                          </div>
+                          <div className="mt-1 text-[0.86rem] font-normal text-[#8a857d]">
+                            {item.note}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-3">
+                        <div className="text-[0.96rem] font-bold text-[#c47739]">
+                          {item.gain}
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-[#7d7870]" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
             </div>
-          </section>  
-
-          <div className="space-y-6">
-            <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
-              <div className="text-[0.68rem] font-semibold uppercase text-[#8d877f]">
-                Kategori Prioritas Berikutnya
-              </div>
-
-              <div className="mt-4 space-y-1">
-                {nextPriorityItems.map((item) => (
-                  <Link
-                    key={item.code}
-                    to={getIndicatorHref(item.slug)}
-                    className="flex items-center justify-between gap-4 border-t border-[#ece7de] py-4 first:border-t-0 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex min-w-0 items-start gap-4">
-                      <div
-                        className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[0.95rem] font-bold"
-                        style={{ backgroundColor: item.tint, color: item.color }}
-                      >
-                        {item.code}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[1rem] font-bold leading-tight text-[#20201c]">{item.title}</div>
-                        <div className="mt-1 text-[0.86rem] font-normal text-[#8a857d]">{item.note}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-3">
-                      <div className="text-[0.96rem] font-bold text-[#c47739]">{item.gain}</div>
-                      <ArrowRight className="h-4 w-4 text-[#7d7870]" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          </div>
+          </section>
         </div>
       </main>
 
@@ -517,11 +536,14 @@ const EvidenceIndicatorDetailPage = () => {
           indicator={indicator}
           requirementId={selectedRequirement.id}
           requirementName={selectedRequirement.name}
-          onClose={() => { setIsUploadModalOpen(false); setSelectedRequirement(null) }}
+          onClose={() => {
+            setIsUploadModalOpen(false);
+            setSelectedRequirement(null);
+          }}
         />
       ) : null}
     </div>
-  )
-}
+  );
+};
 
-export default EvidenceIndicatorDetailPage
+export default EvidenceIndicatorDetailPage;

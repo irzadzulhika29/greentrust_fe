@@ -7,9 +7,10 @@ import {
   Send,
   TrendingUp,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/utils'
+import PressButton from '@/components/ui/PressButton'
 
 // Color mapping per category code — not returned by API
 const CATEGORY_COLORS = {
@@ -38,6 +39,7 @@ const StatCard = ({ label, value, footer }) => (
 )
 
 const UmkmDashboardPage = () => {
+  const navigate = useNavigate()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
@@ -129,19 +131,17 @@ const UmkmDashboardPage = () => {
               </div>
 
               <div className="mt-5 flex gap-2">
-                <Link
-                  to="/umkm/passport"
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#101310] px-5 text-[0.92rem] font-bold text-white shadow-[0_12px_24px_rgba(17,20,17,0.14)] transition hover:bg-[#181d18]"
+                <PressButton
+                  variant="primary"
+                  className="!flex !items-center !gap-2"
+                  onClick={() => navigate('/umkm/passport')}
                 >
                   Buka Green Passport
                   <ArrowRight className="h-4 w-4" />
-                </Link>
-                <button
-                  type="button"
-                  className="inline-flex h-11 items-center rounded-xl border border-[#d8d3ca] bg-[#fbfaf7] px-5 text-[0.92rem] font-bold text-[#20201c] transition hover:bg-white"
-                >
+                </PressButton>
+                <PressButton variant="outline">
                   Bagikan
-                </button>
+                </PressButton>
               </div>
             </div>
           </section>

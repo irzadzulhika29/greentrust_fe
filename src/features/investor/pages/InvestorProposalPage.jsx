@@ -1,46 +1,85 @@
 import React from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Download } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import PressButton from '@/components/ui/PressButton'
 import ProposalCard from '@/features/investor/components/ProposalCard'
 import TolakModal from '@/features/investor/components/TolakModal'
-import { TABS, PROPOSALS } from '@/features/investor/constants/proposalConstants'
+import { TABS } from '@/features/investor/constants/proposalConstants'
+import { apiFetch } from '@/lib/utils'
 
-const STATS = [
-  { label: 'Proposal Aktif', value: '47', sub: 'sejak bergabung' },
-  { label: 'Disetujui UMKM', value: '29', sub: '62% approval rate' },
-  { label: 'Permintaan Masuk', value: '1', sub: 'butuh tinjauan', highlight: true },
-  { label: 'Total Nilai Disetujui', value: 'Rp 28 M', sub: '12 bulan terakhir', large: true },
-]
+const BASE_API = import.meta.env.VITE_BASE_API
 
 const InvestorProposalPage = () => {
-  const [activeTab, setActiveTab] = React.useState('sent')
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = React.useState('draft')
   const [rejectTarget, setRejectTarget] = React.useState(null)
+  const [proposals, setProposals] = React.useState([])
+  const [summary, setSummary] = React.useState(null)
+  const [tabs, setTabs] = React.useState({})
+  const [draftCount, setDraftCount] = React.useState(0)
+  const [sentCount, setSentCount] = React.useState(0)
+  const [loading, setLoading] = React.useState(true)
+  const [fetchError, setFetchError] = React.useState(null)
 
-  const filteredProposals = PROPOSALS.filter((p) => {
-    if (activeTab === 'sent') return p.direction === 'sent'
-    if (activeTab === 'incoming') return p.direction === 'incoming'
-    if (activeTab === 'approved') return p.status === 'Disetujui'
-    if (activeTab === 'rejected') return p.status === 'Ditolak'
-    return true
-  })
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token') ?? ''
+    // draft tab maps to sent on API, filter client-side
+    const apiTab = activeTab === 'draft' ? 'sent' : activeTab === 'incoming' ? 'requests' : activeTab
+    const url = `${BASE_API}/investor/proposals?tab=${apiTab}`
+
+    apiFetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => {
+        setLoading(true)
+        return r.json()
+      })
+      .then((json) => {
+        if (json?.status?.isSuccess) {
+          const items = json.data?.items ?? []
+          // filter client-side for draft/sent split
+          const filtered = activeTab === 'draft'
+            ? items.filter((p) => p.status === 'draft')
+            : activeTab === 'sent'
+            ? items.filter((p) => p.status !== 'draft')
+            : items
+          setProposals(filtered)
+          setSummary(json.data?.summary ?? null)
+          setTabs(json.data?.tabs ?? {})
+          // compute accurate counts when fetching sent tab
+          if (activeTab === 'draft' || activeTab === 'sent') {
+            setDraftCount(items.filter((p) => p.status === 'draft').length)
+            setSentCount(items.filter((p) => p.status !== 'draft').length)
+          }
+          setFetchError(null)
+        } else {
+          throw new Error(json?.message ?? 'Gagal memuat proposal')
+        }
+      })
+      .catch((err) => {
+        setFetchError(err.message)
+        setProposals([])
+      })
+      .finally(() => setLoading(false))
+  }, [activeTab])
+
+  const STATS = summary ? [
+    { label: 'Proposal Aktif', value: summary.active_proposals_count ?? 0, sub: 'sejak bergabung' },
+    { label: 'Disetujui UMKM', value: summary.approved_umkm_count ?? 0, sub: `${summary.approval_rate ?? 0}% approval rate` },
+    { label: 'Permintaan Masuk', value: summary.incoming_umkm_requests_count ?? 0, sub: 'butuh tinjauan', highlight: true },
+    { label: 'Total Nilai Disetujui', value: summary.approved_total_value_label ?? '—', sub: summary.approved_total_period_label ?? '', large: true },
+  ] : []
 
   return (
     <div className="px-8 py-8 sm:px-10 lg:px-12">
       {/* Header */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[2rem] font-semibold text-[#111111]">Proposal & Penawaran</h1>
+          <h1 className="mb-5 text-[2rem] font-semibold text-[#111111]">Proposal & Penawaran</h1>
           <p className="mt-5 text-[0.88rem] text-[#5f5a53]">
-            4 proposal aktif dikirim. 1 proposal masuk dari UMKM butuh keputusan.
+            {loading ? 'Memuat data...' : `${summary?.active_proposals_count ?? 0} proposal aktif dikirim. ${summary?.incoming_umkm_requests_count ?? 0} proposal masuk dari UMKM butuh keputusan.`}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <PressButton className="flex! items-center! gap-2!" variant="ghost">
-            <Download className="h-4 w-4" />
-            Ekspor CSV
-          </PressButton>
-          <PressButton className="flex! items-center! gap-1.5!" variant="primary">
+          <PressButton className="flex! items-center! gap-1.5!" variant="secondary" onClick={() => navigate('/investor/proposal/baru')}>
             <span className="text-base leading-none">+</span>
             Tawarkan ke UMKM
           </PressButton>
@@ -52,10 +91,8 @@ const InvestorProposalPage = () => {
         {STATS.map((stat) => (
           <div key={stat.label} className="rounded-2xl bg-white p-5">
             <div className="mb-3 text-[0.68rem] font-medium text-[#8d877f]">{stat.label}</div>
-            <div
-              className={`font-semibold italic leading-none ${stat.large ? 'text-[1.9rem]' : 'text-[2.2rem]'} ${stat.highlight ? 'text-[#c47739]' : 'text-[#111111]'}`}
-            >
-              {stat.value}
+            <div className={`font-semibold italic leading-none ${stat.large ? 'text-[1.9rem]' : 'text-[2.2rem]'} ${stat.highlight ? 'text-[#c47739]' : 'text-[#111111]'}`}>
+              {loading ? '—' : stat.value}
             </div>
             <div className="mt-2 text-[0.75rem] text-[#5f5a53]">{stat.sub}</div>
           </div>
@@ -67,6 +104,13 @@ const InvestorProposalPage = () => {
         {TABS.map((tab) => {
           const Icon = tab.icon
           const active = activeTab === tab.key
+          let count
+          if (tab.key === 'draft') count = draftCount
+          else if (tab.key === 'sent') count = sentCount
+          else {
+            const tabKey = tab.key === 'incoming' ? 'requests' : tab.key
+            count = tabs[tabKey] ?? 0
+          }
           return (
             <button
               key={tab.key}
@@ -78,13 +122,11 @@ const InvestorProposalPage = () => {
             >
               <Icon className="h-3.5 w-3.5" />
               {tab.label}
-              {tab.count > 0 && (
-                <span
-                  className={`flex min-w-4.5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold ${
-                    active ? 'bg-white text-[#111111]' : 'bg-[#ddd7cd] text-[#5f5a53]'
-                  }`}
-                >
-                  {tab.count}
+              {count > 0 && (
+                <span className={`flex min-w-4.5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold ${
+                  active ? 'bg-white text-[#111111]' : 'bg-[#ddd7cd] text-[#5f5a53]'
+                }`}>
+                  {count}
                 </span>
               )}
             </button>
@@ -94,13 +136,17 @@ const InvestorProposalPage = () => {
 
       {/* Proposal list */}
       <div className="flex flex-col gap-3">
-        {filteredProposals.length === 0 ? (
+        {loading ? (
+          <div className="rounded-2xl bg-white px-6 py-12 text-center text-[0.88rem] text-[#8d877f]">Memuat proposal...</div>
+        ) : fetchError ? (
+          <div className="rounded-2xl bg-white px-6 py-12 text-center text-[0.88rem] text-red-600">{fetchError}</div>
+        ) : proposals.length === 0 ? (
           <div className="rounded-2xl bg-white px-6 py-12 text-center text-[0.88rem] text-[#8d877f]">
             Tidak ada proposal di kategori ini.
           </div>
         ) : (
-          filteredProposals.map((p) => (
-            <ProposalCard key={p.id} p={p} onReject={setRejectTarget} />
+          proposals.map((p) => (
+            <ProposalCard key={p.proposal_id} p={p} onReject={setRejectTarget} />
           ))
         )}
       </div>

@@ -1,15 +1,11 @@
+import { useEffect, useRef, useState } from 'react'
 import PressButton from '@/components/ui/PressButton'
 import InvestorProfilePreviewCard from '@/features/auth/components/InvestorProfilePreviewCard'
+import { apiFetch } from '@/lib/utils'
+
+const BASE_API = import.meta.env.VITE_BASE_API
 
 const WORK_TYPES = ['Full-time', 'Part-time', 'Self-employed', 'Freelance', 'Internship']
-const SKILL_OPTIONS = [
-  'Green Finance',
-  'Due Diligence',
-  'ESG Scoring',
-  'Portfolio Mgmt',
-  'Kerajinan',
-  'Agrikultur',
-]
 const SECTOR_OPTIONS = [
   'Agrikultur',
   'Tekstil & Batik',
@@ -42,8 +38,35 @@ const InvestorOnboardingCareerStep = ({
   onToggleSkill,
   onBack,
   onNext,
+  submitting = false,
+  submitError = null,
 }) => {
   const sectorFocus = Array.isArray(values.sectorFocus) ? values.sectorFocus : []
+  const [skillQuery, setSkillQuery] = useState('')
+  const [skillSuggestions, setSkillSuggestions] = useState([])
+  const [loadingSkills, setLoadingSkills] = useState(false)
+  const debounceRef = useRef(null)
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    if (!skillQuery.trim()) {
+      debounceRef.current = setTimeout(() => setSkillSuggestions([]), 0)
+      return () => clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(async () => {
+      setLoadingSkills(true)
+      try {
+        const res = await apiFetch(`${BASE_API}/onboarding/investor/skills?query=${encodeURIComponent(skillQuery)}`)
+        const json = await res.json()
+        if (json?.data) setSkillSuggestions(json.data)
+      } catch {
+        setSkillSuggestions([])
+      } finally {
+        setLoadingSkills(false)
+      }
+    }, 300)
+    return () => clearTimeout(debounceRef.current)
+  }, [skillQuery])
 
   const handleSectorToggle = (sector) => {
     if (sectorFocus.includes(sector)) {
@@ -51,6 +74,14 @@ const InvestorOnboardingCareerStep = ({
     } else if (sectorFocus.length < 5) {
       onChange('sectorFocus', [...sectorFocus, sector])
     }
+  }
+
+  const handleSkillSelect = (skillName) => {
+    if (!values.skillTags.includes(skillName)) {
+      onToggleSkill(skillName)
+    }
+    setSkillQuery('')
+    setSkillSuggestions([])
   }
 
   const progressItems = [
@@ -148,7 +179,7 @@ const InvestorOnboardingCareerStep = ({
               <input
                 className={inputClass}
                 onChange={(e) => onChange('startDate', e.target.value)}
-                type="text"
+                type="date"
                 value={values.startDate}
               />
             </div>
@@ -159,8 +190,8 @@ const InvestorOnboardingCareerStep = ({
                   className={inputClass}
                   disabled={values.isCurrent}
                   onChange={(e) => onChange('endDate', e.target.value)}
-                  type="text"
-                  value={values.isCurrent ? 'Sekarang' : values.endDate}
+                  type="date"
+                  value={values.isCurrent ? '' : values.endDate}
                 />
                 <label className="inline-flex items-center gap-2 text-[0.82rem] text-[#5f5a53]">
                   <input
@@ -185,24 +216,48 @@ const InvestorOnboardingCareerStep = ({
 
             <div className="md:col-span-2">
               <label className={labelClass}>Skill terkait</label>
-              <div className="flex flex-wrap gap-2">
-                {SKILL_OPTIONS.map((skill) => {
-                  const active = values.skillTags.includes(skill)
-                  return (
+              {/* Selected skills */}
+              {values.skillTags.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {values.skillTags.map((skill) => (
                     <button
-                      className={`rounded-full px-3 py-1.5 text-[0.78rem] font-medium transition-colors ${
-                        active
-                          ? 'bg-[#205336] text-white'
-                          : 'bg-[#ece8df] text-[#6a645c] hover:bg-[#e4dfd5]'
-                      }`}
                       key={skill}
-                      onClick={() => onToggleSkill(skill)}
                       type="button"
+                      onClick={() => onToggleSkill(skill)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#205336] px-3 py-1.5 text-[0.78rem] font-medium text-white transition-colors hover:bg-[#173f2b]"
                     >
-                      {skill}
+                      {skill} ×
                     </button>
-                  )
-                })}
+                  ))}
+                </div>
+              )}
+              {/* Search input */}
+              <div className="relative">
+                <input
+                  className={inputClass}
+                  onChange={(e) => setSkillQuery(e.target.value)}
+                  placeholder="Cari skill... (contoh: Green Finance)"
+                  type="text"
+                  value={skillQuery}
+                />
+                {(loadingSkills || skillSuggestions.length > 0) && (
+                  <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-xl border border-[#ddd7cd] bg-white shadow-lg">
+                    {loadingSkills ? (
+                      <div className="px-4 py-3 text-[0.82rem] text-[#8d877f]">Mencari...</div>
+                    ) : (
+                      skillSuggestions.map((s) => (
+                        <button
+                          key={s.skill_id}
+                          type="button"
+                          onClick={() => handleSkillSelect(s.name)}
+                          className="w-full px-4 py-2.5 text-left text-[0.88rem] text-[#1c1c1c] transition-colors hover:bg-[#f0ece4]"
+                        >
+                          {s.name}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -274,39 +329,6 @@ const InvestorOnboardingCareerStep = ({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[#ece8df] p-4">
-            <span className="text-[0.78rem] font-medium text-[#8c877d]">Timeline pengalaman</span>
-            <div className="mt-3 space-y-3">
-              <div className="flex gap-3">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ddd7cd] text-[0.72rem] font-semibold text-[#6f675d]">
-                  EH
-                </div>
-                <div>
-                  <div className="text-[0.88rem] font-semibold text-[#171717]">
-                    {values.roleTitle}
-                  </div>
-                  <div className="text-[0.8rem] text-[#5f5a53]">
-                    {values.institutionName} · {values.startDate} —{' '}
-                    {values.isCurrent ? 'Present' : values.endDate}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ddd7cd] text-[0.72rem] font-semibold text-[#6f675d]">
-                  BH
-                </div>
-                <div>
-                  <div className="text-[0.88rem] font-semibold text-[#171717]">
-                    Investment Analyst
-                  </div>
-                  <div className="text-[0.8rem] text-[#5f5a53]">
-                    BNI Hijau Desk · Feb 2020 — Mar 2023
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="rounded-2xl bg-[#e4f0e8] px-4 py-3 text-[0.82rem] text-[#4b6073]">
             <span className="font-semibold text-[#1d4f32]">Tips kredibilitas:</span> Minimal 2
             posisi yang jelas akan membantu UMKM menilai relevansi investor lebih cepat.
@@ -317,6 +339,9 @@ const InvestorOnboardingCareerStep = ({
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#f6f2ea]/90 px-8 py-3 backdrop-blur-sm sm:px-12 lg:px-16">
         <div className="mx-auto flex max-w-350 items-center gap-5">
           <div className="flex flex-1 flex-col gap-1.5">
+            {submitError && (
+              <p className="text-[0.75rem] text-red-600">{submitError}</p>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-[0.75rem] font-medium text-[#7d786f]">Progres profil</span>
               <span className="text-[0.75rem] font-semibold text-[#1d211b]">{progress}%</span>
@@ -328,8 +353,8 @@ const InvestorOnboardingCareerStep = ({
               />
             </div>
           </div>
-          <PressButton disabled={!isValid} variant="primary" onClick={onNext}>
-            Simpan & lanjut →
+          <PressButton disabled={!isValid || submitting} variant="primary" onClick={onNext}>
+            {submitting ? 'Menyimpan...' : 'Simpan & lanjut →'}
           </PressButton>
         </div>
       </div>

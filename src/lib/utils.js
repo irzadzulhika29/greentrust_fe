@@ -28,3 +28,21 @@ export function getAuthPayload() {
     return null
   }
 }
+
+/**
+ * Perform a proposal action: send | accept | reject
+ * Returns the updated proposal data on success, throws on failure.
+ */
+export async function proposalAction(proposalId, action) {
+  const token = localStorage.getItem('auth_token') ?? ''
+  const res = await apiFetch(
+    `${import.meta.env.VITE_BASE_API}/proposals/${proposalId}/${action}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  )
+  const json = await res.json()
+  if (!res.ok) throw new Error(json?.message ?? `Error ${res.status}`)
+  return json.data
+}

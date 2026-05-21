@@ -20,6 +20,8 @@ import PassportDetailPage from '@/features/public/pages/PassportDetailPage'
 import InvestorLayout from '@/features/investor/components/InvestorLayout'
 import InvestorDashboardPage from '@/features/investor/pages/InvestorDashboardPage'
 import InvestorProposalPage from '@/features/investor/pages/InvestorProposalPage'
+import InvestorProposalDetailPage from '@/features/investor/pages/InvestorProposalDetailPage'
+import InvestorProposalBaruPage from '@/features/investor/pages/InvestorProposalBaruPage'
 import InvestorProfilPage from '@/features/investor/pages/InvestorProfilPage'
 import InvestorDisimpanPage from '@/features/investor/pages/InvestorDisimpanPage'
 import UmkmDashboard from '@/features/umkm/pages/DashboardPage'
@@ -29,6 +31,7 @@ import UmkmPassport from '@/features/umkm/pages/PassportPage'
 import UmkmProfile   from '@/features/umkm/pages/ProfilePage'
 import UmkmProposal  from '@/features/umkm/pages/ProposalPage'
 import UmkmProposalBaru from '@/features/umkm/pages/ProposalBaruPage'
+import UmkmProposalDetail from '@/features/umkm/pages/UmkmProposalDetailPage'
 
 // Auditor
 import AuditorDashboard from '@/features/auditor/pages/DashboardPage'
@@ -47,11 +50,11 @@ const AppRouter = () => {
         {/* Public — no sidebar */}
         <Route path="/"         element={<LandingPage />} />
         <Route path="/investor" element={<InvestorDirectoryPage />} />
-        <Route path="/investor/:slug" element={<InvestorDetailPage />} />
+        <Route path="/investor/:profileId" element={<InvestorDetailPage />} />
 
         {/* Investor dashboard — with sidebar */}
         <Route path="/direktori" element={<UmkmDirectoryPage />} />
-        <Route path="/passport/:slug" element={<PassportDetailPage />} />
+        <Route path="/passport/:profileId" element={<PassportDetailPage />} />
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/investor/login" element={<InvestorLoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
@@ -64,6 +67,8 @@ const AppRouter = () => {
         </Route>
         <Route path="/investor/proposal" element={<InvestorLayout />}>
           <Route index element={<InvestorProposalPage />} />
+          <Route path="baru" element={<InvestorProposalBaruPage />} />
+          <Route path=":proposalId" element={<InvestorProposalDetailPage />} />
         </Route>
         <Route path="/investor/profil" element={<InvestorLayout />}>
           <Route index element={<InvestorProfilPage />} />
@@ -81,6 +86,7 @@ const AppRouter = () => {
         <Route path="/umkm/profile" element={<AppLayout><UmkmProfile /></AppLayout>} />
         <Route path="/umkm/proposal" element={<AppLayout><UmkmProposal /></AppLayout>} />
         <Route path="/umkm/proposal/baru" element={<AppLayout><UmkmProposalBaru /></AppLayout>} />
+        <Route path="/umkm/proposal/:proposalId" element={<AppLayout><UmkmProposalDetail /></AppLayout>} />
 
         {/* Auditor — with sidebar */}
         <Route path="/auditor"         element={<AppLayout><AuditorDashboard /></AppLayout>} />

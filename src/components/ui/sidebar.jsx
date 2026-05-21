@@ -1,16 +1,20 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   BarChart3,
   Box,
+  ChevronLeft,
+  ChevronRight,
   Diamond,
+  LogOut,
   Menu,
-  MoreHorizontal,
   Send,
   Shield,
   X,
 } from 'lucide-react'
+import PressButton from '@/components/ui/PressButton'
+import primaryLogo from '@/assets/logo/primary-def.webp'
 
 const navItems = [
   { label: 'Dashboard', icon: BarChart3, href: '/umkm' },
@@ -19,103 +23,114 @@ const navItems = [
   { label: 'Proposal', icon: Send, href: '/umkm/proposal', badge: '1' },
 ]
 
-const Brand = () => (
-  <div className="flex h-20 items-center gap-3 border-b border-[#e5e0d8] px-6">
-    <div className="grid h-7 w-7 place-items-center rounded-full border border-[#d8d3ca] bg-white">
-      <Shield className="h-4 w-4 text-[#236041]" />
-    </div>
-    <div className="text-[1rem] font-black tracking-[-0.04em] text-[#236041]">
-      GreenTrust<span className="font-semibold text-[#3f403b]"> Passport</span>
-    </div>
-  </div>
-)
+const SidebarPanel = ({ collapsed, onNavigate }) => {
+  const navigate = useNavigate()
 
-const NavList = ({ onNavigate }) => (
-  <nav className="flex-1 overflow-y-auto px-4 py-4">
-    <ul className="space-y-2">
-      {navItems.map((item) => {
-        const Icon = item.icon
-        const content = (
-          <>
-            <Icon className="h-4 w-4 flex-none" />
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            {item.badge && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#c47739] px-1.5 text-[0.72rem] font-black text-white">
-                {item.badge}
-              </span>
-            )}
-          </>
-        )
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('reg_session_token')
+    if (onNavigate) onNavigate()
+    navigate('/login')
+  }
 
-        if (!item.href) {
-          return (
-            <li key={item.label}>
-              <button
-                type="button"
-                disabled
-                className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[0.95rem] font-bold text-[#5f5a53] opacity-80"
-              >
-                {content}
-              </button>
-            </li>
-          )
-        }
-
-        return (
-          <li key={`${item.label}-${item.href}`}>
-            <NavLink
-              to={item.href}
-              end={item.href === '/umkm'}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex h-11 items-center gap-3 rounded-lg px-3 text-[0.95rem] font-bold transition ${
-                  isActive
-                    ? 'bg-[#dcebdc] text-[#244232]'
-                    : 'text-[#5f5a53] hover:bg-[#f4f1ea] hover:text-[#20201c]'
-                }`
-              }
-            >
-              {content}
-            </NavLink>
-          </li>
-        )
-      })}
-    </ul>
-  </nav>
-)
-
-const AccountCard = () => (
-  <div className="border-t border-[#e5e0d8] p-4">
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-10 flex-none rounded-full bg-[#ece7dc]" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.9rem] font-black leading-tight text-[#20201c]">Batik Siti</p>
-        <p className="truncate text-[0.78rem] font-semibold text-[#8d877f]">id #4821</p>
+  return (
+    <aside className={`flex h-full flex-col bg-white transition-[width] duration-300 ease-in-out border-r border-[#ddd6ca] ${collapsed ? 'w-16' : 'w-64'}`}>
+      {/* Logo */}
+      <div className={`flex items-center gap-3 py-5 ${collapsed ? 'justify-center px-4' : 'px-5'}`}>
+        <img alt="GreenTrust" className="h-8 w-8 shrink-0 object-contain" src={primaryLogo} />
+        {!collapsed && (
+          <div className="text-[0.95rem] font-semibold leading-none text-[#205336]">
+            GreenTrust
+          </div>
+        )}
       </div>
-      <button
-        type="button"
-        aria-label="Buka menu akun"
-        className="grid h-8 w-8 place-items-center rounded-lg text-[#8d877f] transition hover:bg-[#f4f1ea] hover:text-[#20201c]"
-      >
-        <MoreHorizontal className="h-4 w-4" />
-      </button>
-    </div>
-  </div>
-)
 
-const SidebarPanel = ({ onNavigate }) => (
-  <aside className="flex h-full w-64 flex-col border-r border-[#ddd6ca] bg-white">
-    <Brand />
-    <NavList onNavigate={onNavigate} />
-    <AccountCard />
-  </aside>
-)
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-2 py-2">
+        <ul className="flex flex-col gap-0.5">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <li key={item.href}>
+                <NavLink
+                  to={item.href}
+                  end={item.href === '/umkm'}
+                  onClick={onNavigate}
+                  title={collapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    `flex items-center rounded-xl px-3 py-2.5 text-[0.88rem] font-medium transition-colors duration-150 ${
+                      collapsed ? 'justify-center' : 'justify-between'
+                    } ${
+                      isActive
+                        ? 'bg-[#e8f0eb] text-[#205336]'
+                        : 'text-[#5f5a53] hover:bg-[#f4f3ec] hover:text-[#111111]'
+                    }`
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    {!collapsed && item.label}
+                  </div>
+                  {!collapsed && item.badge && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c47739] px-1.5 text-[0.72rem] font-black text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+
+      {/* Logout */}
+      <div className="border-t border-[#e5e0d8] p-4">
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Keluar"
+            className="flex w-full items-center justify-center rounded-xl p-2 text-[#934f42] transition-colors hover:bg-[#fde8e3]"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        ) : (
+          <PressButton
+            variant="outline"
+            className="w-full !flex !items-center !justify-center !gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Keluar
+          </PressButton>
+        )}
+      </div>
+    </aside>
+  )
+}
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <>
+      {/* Desktop sidebar */}
+      <div className="fixed left-0 top-0 z-30 hidden h-screen md:block">
+        <div className="relative h-full">
+          {/* Toggle button */}
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#5f5a53] ring-1 ring-[#e5e4e0] transition-colors hover:text-[#111111]"
+          >
+            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+          </button>
+          <SidebarPanel collapsed={collapsed} />
+        </div>
+      </div>
+
+      {/* Mobile overlay */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -135,20 +150,17 @@ const Sidebar = () => {
               exit={{ x: '-100%' }}
               transition={{ duration: 0.25 }}
             >
-              <SidebarPanel onNavigate={() => setIsOpen(false)} />
+              <SidebarPanel collapsed={false} onNavigate={() => setIsOpen(false)} />
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      <div className="fixed left-0 top-0 z-30 hidden h-screen md:block">
-        <SidebarPanel />
-      </div>
-
+      {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-30 flex h-14 items-center justify-between border-b border-[#ddd6ca] bg-white px-4 md:hidden">
         <div className="flex items-center gap-2 text-[0.95rem] font-black tracking-[-0.04em] text-[#236041]">
           <Shield className="h-4 w-4" />
-          GreenTrust Passport
+          GreenTrust
         </div>
         <button
           type="button"
