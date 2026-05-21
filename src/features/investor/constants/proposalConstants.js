@@ -1,0 +1,106 @@
+import { SendHorizonal, Inbox, CheckCheck, XCircle } from 'lucide-react'
+
+export const TABS = [
+  { key: 'sent', label: 'Saya Kirim', count: 47, icon: SendHorizonal },
+  { key: 'incoming', label: 'Permintaan UMKM', count: 1, icon: Inbox },
+  { key: 'approved', label: 'Disetujui', count: 29, icon: CheckCheck },
+  { key: 'rejected', label: 'Ditolak', count: 12, icon: XCircle },
+]
+
+export const REJECT_CATEGORIES = [
+  'Tidak butuh saat ini',
+  'Tiket terlalu besar',
+  'Tiket terlalu kecil',
+  'Tenor tidak cocok',
+  'Sudah ada mitra',
+  'Lainnya',
+]
+
+export const STATUS_STYLES = {
+  'Menunggu Anda': 'bg-[#fff4d6] text-[#c47739]',
+  'Sedang Ditinjau': 'bg-[#fff4d6] text-[#c47739]',
+  Disetujui: 'bg-[#e8f0eb] text-[#205336]',
+  Ditolak: 'bg-[#fde8e3] text-[#934f42]',
+}
+
+export const TYPE_STYLES = {
+  Pendanaan: 'bg-[#eaf2fb] text-[#336699]',
+  Pengadaan: 'bg-[#fff0e3] text-[#c57f44]',
+  Hibah: 'bg-[#f1ebfb] text-[#7b65a9]',
+  Pinjaman: 'bg-[#eaf6ee] text-[#205336]',
+}
+
+export const PROPOSALS = [
+  {
+    id: 1,
+    direction: 'sent',
+    to: 'Batik Siti',
+    from: 'Arnold Prasetyo',
+    fromInitials: 'AP',
+    type: 'Pendanaan',
+    ref: 'PRP-2026-1042',
+    date: '21 Mei 2026',
+    time: '14:02',
+    title: 'Pendanaan Modal Kerja Ekspansi Produksi',
+    body: 'Halo Bu Siti, kami tertarik mendanai ekspansi workshop pewarnaan alam Anda. Lihat detail dalam lampiran. Terbuka untuk diskusi via WA / video call minggu depan.',
+    file: { name: 'proposal-modal-kerja-ekspansi.pdf', size: '2.1 MB' },
+    nilai: 'Rp 350.000.000',
+    tenor: '24 bln tenor',
+    terms: 'Bagi hasil 8%/thn',
+    status: 'Menunggu Anda',
+  },
+  {
+    id: 2,
+    direction: 'sent',
+    to: 'Batik Siti',
+    from: 'Arnold Prasetyo',
+    fromInitials: 'AP',
+    type: 'Pengadaan',
+    ref: 'PRP-2026-1038',
+    date: '20 Mei 2026',
+    time: '16:40',
+    title: 'Kontrak Pembelian 800 Lembar Batik / Triwulan',
+    body: 'Kainusa Group ingin menambah Batik Siti ke rantai supplier kami untuk lini Heritage. Kontrak awal 12 bulan, ekstensi otomatis. Lihat draft kontrak.',
+    file: { name: 'kontrak-supply-kainusa.pdf', size: '1.6 MB' },
+    nilai: 'Rp 480.000.000',
+    tenor: '12 bln tenor',
+    terms: 'PO triwulan + DP 30%',
+    status: 'Sedang Ditinjau',
+  },
+  {
+    id: 3,
+    direction: 'sent',
+    to: 'Kopi Bumi Toraja',
+    from: 'Arnold Prasetyo',
+    fromInitials: 'AP',
+    type: 'Pendanaan',
+    ref: 'PRP-2026-1031',
+    date: '18 Mei 2026',
+    time: '09:15',
+    title: 'Investasi Pengembangan Kapasitas Roasting',
+    body: 'Kami tertarik mendukung ekspansi kapasitas roasting Kopi Bumi Toraja untuk memenuhi permintaan ekspor ke Eropa. Detail investasi terlampir.',
+    file: { name: 'proposal-roasting-toraja.pdf', size: '1.8 MB' },
+    nilai: 'Rp 750.000.000',
+    tenor: '36 bln tenor',
+    terms: 'Ekuitas 15%',
+    status: 'Disetujui',
+  },
+  {
+    id: 4,
+    direction: 'incoming',
+    to: 'Batik Siti',
+    from: 'Arnold Prasetyo',
+    fromInitials: 'AP',
+    type: 'Pendanaan',
+    ref: 'PRP-2026-1042',
+    date: '21 Mei 2026',
+    time: '14:02',
+    title: 'Pendanaan Modal Kerja Ekspansi Produksi',
+    body: 'Halo Bu Siti, kami tertarik mendanai ekspansi workshop pewarnaan alam Anda. Lihat detail dalam lampiran. Terbuka untuk diskusi via WA / video call minggu depan.',
+    file: { name: 'proposal-modal-kerja-ekspansi.pdf', size: '2.1 MB' },
+    nilai: 'Rp 350.000.000',
+    tenor: '24 bln tenor',
+    terms: 'Bagi hasil 8%/thn',
+    status: 'Menunggu Anda',
+  },
+]
