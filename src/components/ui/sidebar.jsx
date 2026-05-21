@@ -1,262 +1,172 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Home, User, Settings, Bell, Grid, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  BarChart3,
+  Box,
+  Circle,
+  Diamond,
+  FileArchive,
+  History,
+  Menu,
+  MoreHorizontal,
+  Send,
+  Shield,
+  X,
+} from 'lucide-react'
 
-// ─── Nav items config ─────────────────────────────────────────────────────────
+const navItems = [
+  { label: 'Dashboard', icon: BarChart3, href: '/umkm' },
+  { label: 'Evidence Vault', icon: Box, href: '/umkm/evidence' },
+  { label: 'Green Passport', icon: Diamond, href: '/umkm/passport' },
+  { label: 'Proposal', icon: Send, badge: '1' },
+  { label: 'Profil Bisnis', icon: Circle, href: '/umkm/profile' },
+  { label: 'Katalog Produk', icon: FileArchive },
+  { label: 'Aktivitas & Audit', icon: History },
+]
 
-const NAV_ITEMS = [
-  { label: "Home",          icon: <Home className="h-4 w-4" />,     href: "#" },
-  { label: "Notifications", icon: <Bell className="h-4 w-4" />,     href: "#" },
-  { label: "Categories",    icon: <Grid className="h-4 w-4" />,     href: "#" },
-  { label: "Settings",      icon: <Settings className="h-4 w-4" />, href: "#" },
-];
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const AnimatedMenuToggle = ({ toggle, isOpen }) => (
-  <button
-    onClick={toggle}
-    aria-label={isOpen ? "Close menu" : "Open menu"}
-    className="focus:outline-none"
-    style={{ outlineColor: "var(--accent)" }}
-  >
-    <motion.svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      initial="closed"
-      animate={isOpen ? "open" : "closed"}
-      transition={{ duration: 0.3 }}
-      style={{ color: "var(--text-h)" }}
-    >
-      <motion.path
-        fill="transparent"
-        strokeWidth="2.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        variants={{
-          closed: { d: "M 2 2.5 L 22 2.5" },
-          open: { d: "M 3 16.5 L 17 2.5" },
-        }}
-      />
-      <motion.path
-        fill="transparent"
-        strokeWidth="2.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        variants={{
-          closed: { d: "M 2 12 L 22 12", opacity: 1 },
-          open: { opacity: 0 },
-        }}
-        transition={{ duration: 0.2 }}
-      />
-      <motion.path
-        fill="transparent"
-        strokeWidth="2.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        variants={{
-          closed: { d: "M 2 21.5 L 22 21.5" },
-          open: { d: "M 3 2.5 L 17 16.5" },
-        }}
-      />
-    </motion.svg>
-  </button>
-);
-
-const CollapsibleSection = ({ title, children }) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="mb-2">
-      <button
-        className="w-full flex items-center justify-between py-2 px-3 rounded-md text-sm font-medium transition-colors"
-        style={{ color: "var(--text)" }}
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-      >
-        <span>{title}</span>
-        {open
-          ? <ChevronUp className="h-4 w-4" />
-          : <ChevronDown className="h-4 w-4" />
-        }
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
-          >
-            <div className="pl-3 pr-1 pb-1">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+const Brand = () => (
+  <div className="flex h-20 items-center gap-3 border-b border-[#e5e0d8] px-6">
+    <div className="grid h-7 w-7 place-items-center rounded-full border border-[#d8d3ca] bg-white">
+      <Shield className="h-4 w-4 text-[#236041]" />
     </div>
-  );
-};
+    <div className="text-[1rem] font-black tracking-[-0.04em] text-[#236041]">
+      GreenTrust<span className="font-semibold text-[#3f403b]"> Passport</span>
+    </div>
+  </div>
+)
 
-// ─── Shared nav list ──────────────────────────────────────────────────────────
+const NavList = ({ onNavigate }) => (
+  <nav className="flex-1 overflow-y-auto px-4 py-4">
+    <ul className="space-y-2">
+      {navItems.map((item) => {
+        const Icon = item.icon
+        const content = (
+          <>
+            <Icon className="h-4 w-4 flex-none" />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {item.badge && (
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#c47739] px-1.5 text-[0.72rem] font-black text-white">
+                {item.badge}
+              </span>
+            )}
+          </>
+        )
 
-const NavList = () => (
-  <nav className="flex-1 p-4 overflow-y-auto">
-    <ul className="space-y-1">
-      {NAV_ITEMS.map((item) => (
-        <li key={item.label}>
-          <a
-            href={item.href}
-            className="flex items-center gap-3 w-full py-2 px-3 rounded-md text-sm font-medium transition-colors"
-            style={{ color: "var(--text-h)" }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--code-bg)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
-          >
-            {item.icon}
-            {item.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-
-    <div
-      className="mt-4 pt-4"
-      style={{ borderTop: "1px solid var(--border)" }}
-    >
-      <CollapsibleSection title="Extra Options">
-        <ul className="space-y-1">
-          {["Subscriptions", "Appearance"].map((label) => (
-            <li key={label}>
+        if (!item.href) {
+          return (
+            <li key={item.label}>
               <button
-                className="w-full text-left text-sm py-1.5 px-3 rounded-md transition-colors"
-                style={{ color: "var(--text)" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--code-bg)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
+                type="button"
+                disabled
+                className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[0.95rem] font-bold text-[#5f5a53] opacity-80"
               >
-                {label}
+                {content}
               </button>
             </li>
-          ))}
-        </ul>
-      </CollapsibleSection>
+          )
+        }
 
-      <CollapsibleSection title="More Info">
-        <p className="text-sm px-3 py-1" style={{ color: "var(--text)" }}>
-          Additional details and settings can be found here.
-        </p>
-      </CollapsibleSection>
-    </div>
+        return (
+          <li key={`${item.label}-${item.href}`}>
+            <NavLink
+              to={item.href}
+              end={item.href === '/umkm'}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                `flex h-11 items-center gap-3 rounded-lg px-3 text-[0.95rem] font-bold transition ${
+                  isActive
+                    ? 'bg-[#dcebdc] text-[#244232]'
+                    : 'text-[#5f5a53] hover:bg-[#f4f1ea] hover:text-[#20201c]'
+                }`
+              }
+            >
+              {content}
+            </NavLink>
+          </li>
+        )
+      })}
+    </ul>
   </nav>
-);
+)
 
-// ─── Profile header ───────────────────────────────────────────────────────────
-
-const ProfileHeader = () => (
-  <div className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
+const AccountCard = () => (
+  <div className="border-t border-[#e5e0d8] p-4">
     <div className="flex items-center gap-3">
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-        style={{ background: "var(--code-bg)" }}
+      <div className="h-10 w-10 flex-none rounded-full bg-[#ece7dc]" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[0.9rem] font-black leading-tight text-[#20201c]">Batik Siti</p>
+        <p className="truncate text-[0.78rem] font-semibold text-[#8d877f]">id #4821</p>
+      </div>
+      <button
+        type="button"
+        aria-label="Buka menu akun"
+        className="grid h-8 w-8 place-items-center rounded-lg text-[#8d877f] transition hover:bg-[#f4f1ea] hover:text-[#20201c]"
       >
-        <User className="h-5 w-5" style={{ color: "var(--text)" }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: "var(--text-h)" }}>
-          GreenTrust User
-        </p>
-        <p className="text-xs truncate" style={{ color: "var(--text)" }}>
-          user@greentrust.app
-        </p>
-      </div>
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
     </div>
   </div>
-);
+)
 
-// ─── Footer action ────────────────────────────────────────────────────────────
-
-const SidebarFooter = () => (
-  <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
-    <button
-      className="w-full text-sm font-medium py-2 px-4 rounded-md transition-all"
-      style={{
-        background: "var(--social-bg)",
-        border: "1px solid var(--border)",
-        color: "var(--text-h)",
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "var(--shadow)")}
-      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-    >
-      View profile
-    </button>
-  </div>
-);
-
-// ─── Main Sidebar export ──────────────────────────────────────────────────────
+const SidebarPanel = ({ onNavigate }) => (
+  <aside className="flex h-full w-64 flex-col border-r border-[#ddd6ca] bg-white">
+    <Brand />
+    <NavList onNavigate={onNavigate} />
+    <AccountCard />
+  </aside>
+)
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleSidebar = () => setIsOpen((prev) => !prev);
-
-  const sidebarStyle = {
-    background: "var(--bg)",
-    borderRight: "1px solid var(--border)",
-  };
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
-      {/* Mobile overlay sidebar */}
       <AnimatePresence>
         {isOpen && (
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden fixed inset-0 z-50 flex flex-col w-72"
-            style={sidebarStyle}
-            aria-label="Mobile navigation"
-          >
-            <ProfileHeader />
-            <NavList />
-            <SidebarFooter />
-          </motion.aside>
+          <>
+            <motion.button
+              type="button"
+              aria-label="Tutup menu"
+              className="fixed inset-0 z-40 bg-[#101310]/25 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-y-0 left-0 z-50 md:hidden"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.25 }}
+            >
+              <SidebarPanel onNavigate={() => setIsOpen(false)} />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar */}
-      <aside
-        className="hidden md:flex flex-col fixed top-0 left-0 h-full w-64"
-        style={sidebarStyle}
-        aria-label="Main navigation"
-      >
-        <ProfileHeader />
-        <NavList />
-        <SidebarFooter />
-      </aside>
+      <div className="fixed left-0 top-0 z-30 hidden h-screen md:block">
+        <SidebarPanel />
+      </div>
 
-      {/* Mobile topbar */}
-      <div
-        className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
-        style={{
-          background: "var(--bg)",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <span className="text-sm font-semibold" style={{ color: "var(--text-h)" }}>
-          GreenTrust
-        </span>
-        <AnimatedMenuToggle toggle={toggleSidebar} isOpen={isOpen} />
+      <div className="fixed left-0 right-0 top-0 z-30 flex h-14 items-center justify-between border-b border-[#ddd6ca] bg-white px-4 md:hidden">
+        <div className="flex items-center gap-2 text-[0.95rem] font-black tracking-[-0.04em] text-[#236041]">
+          <Shield className="h-4 w-4" />
+          GreenTrust Passport
+        </div>
+        <button
+          type="button"
+          aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}
+          onClick={() => setIsOpen((current) => !current)}
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[#d8d3ca] bg-[#fbfaf7] text-[#20201c]"
+        >
+          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </button>
       </div>
     </>
-  );
-};
+  )
+}
 
-export { Sidebar };
+export { Sidebar }

@@ -3,24 +3,32 @@
 
 :root {
   /* Colors */
-  --text: #6b6375;
-  --text-h: #08060d;
   --bg: #ffffff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --surface: #f4f3ec;
+  --primary: #205336;
+  --primary-bg: #e8f0eb;
+  --secondary: #FDA800;
+  --secondary-bg: #fff4d6;
+  --text-h: #111111;
+  --text: #5f5a53;
+  --border: #e5e4e0;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
+  /* Legacy aliases kept for backward compat */
+  --accent: #205336;
+  --accent-bg: rgba(32, 83, 54, 0.10);
+  --accent-border: rgba(32, 83, 54, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --code-bg: #f4f3ec;
+
   /* Typography */
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: "Plus Jakarta Sans", sans-serif;
+  --heading: "Plus Jakarta Sans", sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
+  font-size: 16px;
+  line-height: 145%;
   letter-spacing: 0.18px;
   color-scheme: light;
   color: var(--text);
@@ -45,31 +53,6 @@ body {
   flex-direction: column;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
 p {
   margin: 0;
 }

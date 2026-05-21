@@ -17,59 +17,61 @@ These rules are non-negotiable and apply to every component:
 
 ## 1. Visual Theme & Atmosphere
 
-Clean, minimal, and trustworthy. The aesthetic is purposefully restrained — lots of breathing room, neutral surfaces, and a single purple accent that carries all interactive weight. Think "professional sustainability dashboard": serious enough to convey credibility, light enough to feel approachable.
+Clean, minimal, and trustworthy. The aesthetic is purposefully restrained — lots of breathing room, white surfaces, and a deep forest green primary that carries all interactive weight. Gold accent is used sparingly for highlights and badges. Think "professional sustainability dashboard": serious enough to convey credibility, light enough to feel approachable.
 
-Light mode is the primary experience. Dark mode is fully supported via `prefers-color-scheme`.
+Light mode is the primary experience.
 
 ---
 
 ## 2. Color Palette & Roles
 
-### Light Mode
+### Core Colors
 
 | Name | Hex | Role |
 |---|---|---|
-| Off-White Canvas | `#ffffff` | Page background (`--bg`) |
-| Warm Parchment | `#f4f3ec` | Code blocks, muted surface backgrounds (`--code-bg`) |
-| Frosted Social | `rgba(244,243,236,0.5)` | Semi-transparent card/button backgrounds (`--social-bg`) |
-| Quiet Slate | `#6b6375` | Body text, secondary labels (`--text`) |
-| Near-Black Ink | `#08060d` | Headings, high-emphasis text (`--text-h`) |
-| Hairline Gray | `#e5e4e7` | Borders, dividers, structural lines (`--border`) |
-| Electric Violet | `#aa3bff` | Primary accent — CTAs, links, active states (`--accent`) |
-| Violet Wash | `rgba(170,59,255,0.10)` | Accent element backgrounds — never on cards/buttons (`--accent-bg`) |
+| **White** | `#FFFFFF` | Main background (`--bg`) |
+| **Forest Green** | `#205336` | Primary — CTAs, links, active states, brand (`--primary`) |
+| **Gold** | `#FDA800` | Secondary — highlights, badges, tier indicators (`--secondary`) |
 
-### Dark Mode
+### Extended Palette
 
 | Name | Hex | Role |
 |---|---|---|
-| Deep Charcoal | `#16171d` | Page background (`--bg`) |
-| Sunken Surface | `#1f2028` | Code blocks, inset surfaces (`--code-bg`) |
-| Dim Social | `rgba(47,48,58,0.5)` | Semi-transparent card/button backgrounds (`--social-bg`) |
-| Cool Ash | `#9ca3af` | Body text, secondary labels (`--text`) |
-| Ghost White | `#f3f4f6` | Headings, high-emphasis text (`--text-h`) |
-| Charcoal Line | `#2e303a` | Borders, dividers (`--border`) |
-| Soft Lavender | `#c084fc` | Primary accent in dark mode (`--accent`) |
-| Lavender Wash | `rgba(192,132,252,0.15)` | Accent element backgrounds — never on cards/buttons (`--accent-bg`) |
+| Warm Parchment | `#f4f3ec` | Muted surface backgrounds (`--surface`) |
+| Light Green Tint | `#e8f0eb` | Primary element backgrounds, hover states (`--primary-bg`) |
+| Light Gold Tint | `#fff4d6` | Secondary element backgrounds (`--secondary-bg`) |
+| Near-Black | `#111111` | Headings, high-emphasis text (`--text-h`) |
+| Slate Gray | `#5f5a53` | Body text, secondary labels (`--text`) |
+| Hairline Gray | `#e5e4e0` | Borders, dividers (`--border`) |
+
+### Usage Rules
+
+- **Primary `#205336`** — all CTAs, nav active states, links, progress bars, on-chain badges
+- **Secondary `#FDA800`** — tier badges (Unggul), star icons, highlight numbers, GRS score for top tier
+- **White `#FFFFFF`** — page background, card backgrounds
+- **Never** use primary or secondary as card/section backgrounds — use tints (`--primary-bg`, `--secondary-bg`) instead
 
 ---
 
 ## 3. Typography Rules
 
 **Font families:**
-- Headings: `system-ui, 'Segoe UI', Roboto, sans-serif` — clean, native, no web font overhead
-- Body: same stack — consistent and legible across platforms
-- Monospace: `ui-monospace, Consolas, monospace` — for code snippets only
+- All text: `"Plus Jakarta Sans", sans-serif`
+- Monospace: `ui-monospace, Consolas, monospace` — for code/hash snippets only
 
 **Scale:**
 
-| Level | Size | Weight | Letter Spacing | Usage |
-|---|---|---|---|---|
-| H1 | 56px (36px mobile) | 500 | -1.68px | Page titles only |
-| H2 | 24px (20px mobile) | 500 | -0.24px | Section headings |
-| Body | 18px (16px mobile) | 400 | 0.18px | Paragraphs, labels |
-| Code | 15px | 400 | inherit | Inline code |
+| Level | Tailwind | Weight | Usage |
+|---|---|---|---|
+| Display | `text-4xl` / `text-5xl` | 600 | Hero headlines |
+| H1 | `text-3xl` / `text-4xl` | 600 | Page titles |
+| H2 | `text-2xl` | 600 | Section headings |
+| H3 | `text-xl` | 600 | Card titles |
+| Body | `text-base` | 400 | Paragraphs |
+| Small | `text-sm` | 400 | Labels, captions |
+| Micro | `text-xs` / `text-[10px]` | 600 | Uppercase labels, badges |
 
-Line height is 145% for body text. Headings use 118% line height.
+**Letter spacing:** Normal (no `tracking-wide` or `tracking-wider` on body text). Negative tracking only on large display text.
 
 ---
 
@@ -77,71 +79,50 @@ Line height is 145% for body text. Headings use 118% line height.
 
 ### Buttons
 
-- **Shape:** Slightly rounded corners — `border-radius: 4–6px`. Not pill-shaped, not sharp.
-- **Background:** Flat solid color only. Use `--accent-bg` (violet wash) for primary, `--social-bg` for secondary/ghost. No gradients.
-- **Border:** `border: 2px solid transparent` at rest. Border becomes visible only on `:hover` using `--accent-border` (semi-transparent violet) — this is the one permitted colored border, only on interactive hover state, not at rest.
-- **Focus:** `outline: 2px solid var(--accent)` with `outline-offset: 2px` — required for accessibility.
-- **Text color:** `--text-h` (near-black / ghost white in dark mode).
-- **Transition:** `border-color 0.3s` for hover, smooth and subtle.
+- **Primary:** `bg-[#205336] text-white` — hover `bg-[#173d28]`
+- **Secondary:** `bg-[#FDA800] text-[#111]` — hover `bg-[#e09700]`
+- **Ghost:** `border border-[#e5e4e0] bg-white text-[#111]` — hover `bg-[#f4f3ec]`
+- **Shape:** `rounded-xl` (12px). Not pill-shaped.
+- **No gradients.**
 
-### Cards / Containers
+### Cards
 
-- **Background:** Flat solid — `--social-bg` (frosted/dim) or `--bg` (white/charcoal). No gradients.
-- **Border:** `1px solid var(--border)` (hairline gray / charcoal line). No accent-colored borders.
-- **Corner roundness:** Subtly rounded — `border-radius: 6px`.
-- **Shadow:** Whisper-soft diffused shadow on hover only — `rgba(0,0,0,0.1) 0 10px 15px -3px, rgba(0,0,0,0.05) 0 4px 6px -2px`. Flat at rest.
-- **Padding:** 32px desktop, 24px mobile.
-
-### Inputs / Forms
-
-*(To be defined when form components are added)*
-
-- Follow the same flat-background rule.
-- Border: `1px solid var(--border)` at rest. No accent border at rest.
-- Focus: `outline` or `border-color` using `--accent` only.
-
-### Code Snippets
-
-- Background: `--code-bg` (warm parchment / sunken surface).
-- `border-radius: 4px`, padding `4px 8px`.
-- Font: monospace stack, 15px.
+- **Background:** `bg-white`
+- **Border:** `1px solid #e5e4e0`
+- **Radius:** `rounded-2xl` (16px)
+- **Shadow:** Soft on hover only
 
 ### Badges / Tags
 
-*(To be defined when badge components are added)*
-
-- Flat background using a tint from the palette.
-- No gradient fills, no colorful borders.
+- **Tier Unggul:** `bg-[#fff4d6] text-[#c47739]` — gold tint
+- **Tier Siap:** `bg-[#e8f0eb] text-[#205336]` — green tint
+- **On-chain:** `bg-[#e8f0eb] text-[#205336]`
 
 ---
 
 ## 5. Layout Principles
 
-- **Max content width:** 1126px, centered with `margin: 0 auto`.
-- **Structural border:** `1px solid var(--border)` on the inline edges of `#root` — creates a contained column feel.
-- **Whitespace:** Generous. Section padding is 32px desktop / 24px mobile. Gap between stacked elements is 25px desktop / 18px mobile.
-- **Grid:** Flex-based two-column layout for peer sections (e.g., docs + social). Each column takes equal `flex: 1 1 0`. Collapses to single column below 1024px.
-- **Alignment:** Center-aligned for hero/CTA sections. Left-aligned for content-heavy sections.
-- **Dividers:** `1px solid var(--border)` horizontal lines between sections. Decorative tick marks (CSS `::before`/`::after`) at section boundaries use the same border color.
-- **Responsive breakpoint:** 1024px — font sizes, padding, and layout direction all adjust at this single breakpoint.
+- **Max content width:** `max-w-7xl` (1280px), centered
+- **Section padding:** `px-4 sm:px-6 lg:px-8`
+- **Section vertical spacing:** `mt-24` between major sections
+- **Responsive breakpoint:** 1024px (lg)
 
 ---
 
 ## 6. Interaction & Motion
 
-- Transitions are subtle and single-property: `border-color 0.3s`, `box-shadow 0.3s`.
-- No entrance animations, no parallax, no scroll-triggered effects by default.
-- Motion should never be the focus — it only confirms interaction.
+- Transitions subtle: `transition-colors duration-200`, `transition-transform duration-500`
+- Hover scale on cards: `group-hover:scale-105`
+- No entrance animations by default
 
 ---
 
 ## 7. Accessibility Baseline
 
-- Focus rings are always visible: `outline: 2px solid var(--accent)` with offset.
-- Color contrast: `--text` on `--bg` meets WCAG AA. `--text-h` on `--bg` meets AAA.
-- Dark mode is automatic via `prefers-color-scheme` — no manual toggle required (can be added later).
-- Icon-only elements use `aria-hidden="true"` with adjacent visible labels.
+- Focus rings: `outline: 2px solid #205336` with offset
+- Color contrast: all text meets WCAG AA minimum
+- Icon-only elements use `aria-hidden="true"` with adjacent visible labels
 
 ---
 
-*This file is a living document. When new components are added, update the relevant section above.*
+*This file is a living document. Update when new components are added.*

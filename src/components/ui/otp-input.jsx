@@ -50,7 +50,6 @@ export const Basic = ({ onComplete, inline = false }) => {
       </div>
       <h2
         className="text-[2rem] leading-[0.95] tracking-[-0.06em] text-[#171717] mb-2.5"
-        style={{ fontFamily: 'Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif' }}
       >
         Cek email Anda.
       </h2>
