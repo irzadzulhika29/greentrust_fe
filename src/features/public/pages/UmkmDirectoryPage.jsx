@@ -44,8 +44,16 @@ const UmkmDirectoryPage = () => {
   const [items, setItems] = React.useState([])
   const [meta, setMeta] = React.useState(null)
   const [filters, setFilters] = React.useState({ sectors: [], provinces: [], tiers: [] })
+  const [allSectors, setAllSectors] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const debounceRef = React.useRef(null)
+
+  React.useEffect(() => {
+    apiFetch(`${BASE_API}/sectors`)
+      .then((r) => r.json())
+      .then((json) => { if (json?.data) setAllSectors(json.data) })
+      .catch(() => {})
+  }, [])
 
   const fetchData = React.useCallback(() => {
     const params = new URLSearchParams()
@@ -127,19 +135,23 @@ const UmkmDirectoryPage = () => {
               />
             </div>
 
-            {/* Sektor from API */}
+            {/* Sektor from /sectors API */}
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-[#5f5a53] mb-3">Sektor</div>
               <div className="flex flex-col gap-1.5">
-                {filters.sectors.map((s) => (
-                  <FilterCheckbox
-                    key={s.sector_id}
-                    label={s.sector_name}
-                    count={s.count}
-                    checked={selectedSectors.includes(s.sector_id)}
-                    onChange={() => toggleItem(selectedSectors, setSelectedSectors, s.sector_id)}
-                  />
-                ))}
+                {allSectors.map((s) => {
+                  const filterData = filters.sectors.find((f) => f.sector_id === s.sector_id)
+                  const count = filterData?.count ?? 0
+                  return (
+                    <FilterCheckbox
+                      key={s.sector_id}
+                      label={s.sector_name}
+                      count={count > 0 ? count : undefined}
+                      checked={selectedSectors.includes(s.sector_id)}
+                      onChange={() => toggleItem(selectedSectors, setSelectedSectors, s.sector_id)}
+                    />
+                  )
+                })}
               </div>
             </div>
 
@@ -147,7 +159,7 @@ const UmkmDirectoryPage = () => {
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-[#5f5a53] mb-3">Tier GRS</div>
               <div className="flex flex-col gap-1.5">
-                {filters.tiers.map((t) => (
+                {filters.tiers.filter((t) => t.count > 0).map((t) => (
                   <FilterCheckbox
                     key={t.tier}
                     label={`${t.label} (${t.min_score}–${t.max_score})`}
@@ -163,7 +175,7 @@ const UmkmDirectoryPage = () => {
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-[#5f5a53] mb-3">Provinsi</div>
               <div className="flex flex-col gap-1.5">
-                {filters.provinces.map((p) => (
+                {filters.provinces.filter((p) => p.count > 0).map((p) => (
                   <FilterCheckbox
                     key={p.name}
                     label={p.name}

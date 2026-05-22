@@ -39,6 +39,7 @@ const UploadDocumentModal = ({
   requirementId,
   requirementName,
   onClose,
+  onSuccess,
 }) => {
   const fileInputRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -128,6 +129,10 @@ const UploadDocumentModal = ({
       }
 
       setSubmitState("success");
+      setTimeout(() => {
+        onClose();
+        onSuccess?.();
+      }, 1500);
     } catch (err) {
       setSubmitState("error");
       setErrorMsg(err.message ?? "Terjadi kesalahan saat mengirim file.");
@@ -363,6 +368,20 @@ const EvidenceIndicatorDetailPage = () => {
     return <Navigate to="/umkm/evidence" replace />;
   }
 
+  const refreshData = () => {
+    const token = localStorage.getItem("auth_token") ?? "";
+    setLoadingDetail(true);
+    apiFetch(`${BASE_API}/evidence/categories/${indicator.code}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) setCategoryDetail(json.data);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingDetail(false));
+  };
+
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#20201c]">
       <header>
@@ -540,6 +559,7 @@ const EvidenceIndicatorDetailPage = () => {
             setIsUploadModalOpen(false);
             setSelectedRequirement(null);
           }}
+          onSuccess={refreshData}
         />
       ) : null}
     </div>
