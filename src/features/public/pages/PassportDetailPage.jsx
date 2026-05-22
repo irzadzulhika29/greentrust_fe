@@ -7,14 +7,9 @@ import PressButton from '@/components/ui/PressButton'
 
 const BASE_API = import.meta.env.VITE_BASE_API
 
-const CATEGORY_COLORS = {
-  BB: { color: '#7a5521', tint: '#fbefd7' },
-  PP: { color: '#236041', tint: '#dcebdc' },
-  PL: { color: '#176174', tint: '#dff5f8' },
-  EE: { color: '#6b4b12', tint: '#f7edce' },
-  SK: { color: '#934f42', tint: '#fde8e3' },
-  LK: { color: '#45457b', tint: '#e7e7fb' },
-}
+const ICON_BG = '#f0ece4'
+const ICON_COLOR = '#5f5a53'
+const BAR_COLOR = '#5f5a53'
 
 const getTierLabel = (grs) => {
   if (grs >= 85) return 'Unggul'
@@ -93,17 +88,14 @@ const PassportCard = ({ passport, profile, cardRef }) => {
             <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: '#111111' }}>GreenTrust Passport</div>
             <div style={{ marginTop: '4px', fontSize: '11px', color: '#5f5a53' }}>{descriptor || 'Status blockchain aktif.'}</div>
             <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-              {categoryScores.map((cat) => {
-                const meta = CATEGORY_COLORS[cat.category_id] ?? { tint: '#eee', color: '#555' }
-                return (
+              {categoryScores.map((cat) => (
                   <div key={cat.category_id} style={{ textAlign: 'center' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: meta.tint, color: meta.color, display: 'grid', placeItems: 'center', fontSize: '11px', fontWeight: 700, margin: '0 auto' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: ICON_BG, color: ICON_COLOR, display: 'grid', placeItems: 'center', fontSize: '11px', fontWeight: 700, margin: '0 auto' }}>
                       {cat.category_id}
                     </div>
                     <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: 600, color: '#111111' }}>{cat.percent}%</div>
                   </div>
-                )
-              })}
+                ))}
             </div>
           </div>
         </div>
@@ -125,12 +117,6 @@ const PassportCard = ({ passport, profile, cardRef }) => {
       </div>
     </div>
   )
-}
-
-const getScoreBarTone = (score) => {
-  if (score >= 85) return 'bg-[#23c48e]'
-  if (score >= 70) return 'bg-[#4f8b5e]'
-  return 'bg-[#f29d13]'
 }
 
 const PassportDetailPage = () => {
@@ -326,14 +312,13 @@ const PassportDetailPage = () => {
           </div>
           <div className="grid gap-x-12 gap-y-6 lg:grid-cols-2">
             {categories.map((cat) => {
-              const meta = CATEGORY_COLORS[cat.code] ?? { color: '#205336', tint: '#e8f0eb' }
               const score = cat.score ?? 0
               const pct = cat.progress_percent ?? (cat.required_count > 0 ? Math.round((cat.fulfilled_count / cat.required_count) * 100) : 0)
               return (
                 <div key={cat.code}>
                   <div className="mb-2 flex items-center justify-between gap-4">
                     <div className="inline-flex items-center gap-3">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg text-[0.82rem] font-bold" style={{ backgroundColor: meta.tint, color: meta.color }}>
+                      <div className="grid h-8 w-8 place-items-center rounded-lg text-[0.82rem] font-bold" style={{ backgroundColor: ICON_BG, color: ICON_COLOR }}>
                         {cat.code}
                       </div>
                       <div className="text-[1rem] font-bold text-[#20201c]">{cat.name}</div>
@@ -341,7 +326,7 @@ const PassportDetailPage = () => {
                     <div className="text-[0.98rem] font-bold text-[#5f5a53]">{score}/{cat.weight}</div>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-[#e7edf0]">
-                    <div className={`h-full rounded-full ${getScoreBarTone(pct)}`} style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: BAR_COLOR }} />
                   </div>
                   <div className="mt-1 text-[0.75rem] text-[#8d877f]">{cat.fulfilled_count}/{cat.required_count} dokumen</div>
                 </div>

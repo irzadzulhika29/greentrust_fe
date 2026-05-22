@@ -250,7 +250,7 @@ const InvestorDirectoryPage = () => {
                           </div>
                           {investor.ticket_range && (
                             <div>
-                              <div className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[#8d877f]">Tiket</div>
+                              <div className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[#8d877f]">Pendanaan</div>
                               <div className="mt-1 text-[0.82rem] font-bold text-[#20201c]">{investor.ticket_range}</div>
                             </div>
                           )}
