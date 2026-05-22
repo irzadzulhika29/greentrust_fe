@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navbar } from '@/components/ui/navbar'
 import Iridescence from '@/components/ui/Iridescence'
+import PublicFooter from '@/components/ui/PublicFooter'
 
 const UMKM_STEPS = [
   {
@@ -443,6 +444,7 @@ const CaraKerjaPage = () => {
           })}
         </section>
       </main>
+      <PublicFooter />
     </div>
   )
 }

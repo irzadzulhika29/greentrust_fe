@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Navbar } from '@/components/ui/navbar'
 import Iridescence from '@/components/ui/Iridescence'
 import { UmkmCard } from '@/components/ui/card-umkm'
+import PublicFooter from '@/components/ui/PublicFooter'
 import { apiFetch } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -110,7 +111,7 @@ const UmkmDirectoryPage = () => {
       </div>
 
       {/* Body: sidebar + grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex gap-8 items-start">
 
           {/* Sidebar */}
@@ -274,6 +275,7 @@ const UmkmDirectoryPage = () => {
           </div>
         </div>
       </div>
+      <PublicFooter />
     </div>
   )
 }

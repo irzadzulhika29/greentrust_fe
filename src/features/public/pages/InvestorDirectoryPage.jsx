@@ -3,6 +3,7 @@ import { Search, ChevronDown, RotateCcw, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Navbar } from '@/components/ui/navbar'
 import Iridescence from '@/components/ui/Iridescence'
+import PublicFooter from '@/components/ui/PublicFooter'
 import { apiFetch } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -106,7 +107,7 @@ const InvestorDirectoryPage = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex items-start gap-8">
           <aside className="hidden w-52 shrink-0 border-r border-[#e5e4e0] pr-6 lg:flex lg:flex-col lg:gap-8">
             <div className="relative">
@@ -263,6 +264,7 @@ const InvestorDirectoryPage = () => {
           </div>
         </div>
       </main>
+      <PublicFooter />
     </div>
   )
 }

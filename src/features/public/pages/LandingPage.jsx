@@ -5,6 +5,7 @@ import { Navbar } from '@/components/ui/navbar'
 import { UmkmCard } from '@/components/ui/card-umkm'
 import PressButton from '@/components/ui/PressButton'
 import Grainient from '@/components/ui/Grainient'
+import PublicFooter from '@/components/ui/PublicFooter'
 import { apiFetch } from '@/lib/utils'
 
 const BASE_API = import.meta.env.VITE_BASE_API
@@ -188,7 +189,7 @@ const LandingPage = () => {
                   untuk umkm
                 </div>
                 <h2 className="max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
-                  Mulai bukti hijau Anda <span className="italic text-[#8db58a]">hari ini</span>. Gratis.
+                  Mulai hijaukan perekonomian kita <span className="italic text-[#8db58a]">hari ini</span>. Gratis.
                   Selamanya.
                 </h2>
                 <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/78">
@@ -197,26 +198,19 @@ const LandingPage = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-4 lg:pl-8">
-                <button
-                  type="button"
-                  onClick={() => navigate('/register')}
-                  className="rounded-2xl bg-[#c47b3d] px-6 py-5 text-lg font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition-colors duration-200 hover:bg-[#b57036]"
-                >
-                  Daftarkan Bisnis Saya <span aria-hidden="true">-&gt;</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/cara-kerja')}
-                  className="rounded-2xl border border-white/18 bg-transparent px-6 py-5 text-lg font-semibold text-white transition-colors duration-200 hover:bg-white/6"
-                >
+              <div className="flex gap-3 lg:pl-8 w-fit">
+                <PressButton variant="secondary" className="!text-lg !px-4 !py-5 !rounded-xl" onClick={() => navigate('/register')}>
+                  Daftarkan Bisnis Saya
+                </PressButton>
+                <PressButton variant="ghost" className="!text-lg !px-4 !py-2 !rounded-xl !border-white/30 !bg-white/10 !text-white hover:!bg-white/20" onClick={() => navigate('/cara-kerja')}>
                   Lihat Demo
-                </button>
+                </PressButton>
               </div>
             </div>
           </div>
         </section>
       </main>
+      <PublicFooter />
     </div>
   )
 }
