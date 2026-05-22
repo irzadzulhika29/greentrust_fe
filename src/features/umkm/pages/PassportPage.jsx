@@ -35,16 +35,21 @@ const issuanceSteps = [
   },
 ];
 
-const summaryRows = [
-  { label: "UMKM", value: "Batik Siti" },
-  { label: "GRS final", value: "87 / 100", valueTone: "text-[#236041]" },
-  { label: "Tier", badge: "Unggul" },
-  { label: "Dokumen on-chain", value: "18 file" },
-];
+const PassportSubmissionView = ({ onIssue, issuing, issueError, grsData }) => {
+  const grs = grsData?.grs_score ?? 0
+  const threshold = grsData?.passport_threshold ?? 70
+  const tierLabel = grs >= 85 ? 'Unggul' : grs >= 70 ? 'Siap' : 'Berkembang'
 
-const PassportSubmissionView = ({ onIssue, issuing, issueError }) => (
-  <>
-    <header className="border-b border-[#e7e1d8]">
+  const summaryRows = [
+    { label: 'GRS saat ini', value: `${grs} / 100`, valueTone: 'text-[#236041]' },
+    { label: 'Ambang Passport', value: `${threshold}` },
+    { label: 'Tier', badge: tierLabel },
+    { label: 'Status', value: grsData?.passport_status ?? '—' },
+  ]
+
+  return (
+    <>
+      <header className="border-b border-[#e7e1d8]">
       <div className="px-6 py-5 lg:px-12">
         <h1 className="m-0 text-[2.25rem] leading-none tracking-[-0.06em] text-[#181816]">
           Ajukan Verifikasi Blockchain
@@ -57,7 +62,7 @@ const PassportSubmissionView = ({ onIssue, issuing, issueError }) => (
         <section className="rounded-[20px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#dcebdc] px-4 py-2 text-[0.86rem] font-bold uppercase text-[#244232]">
             <Check className="h-4 w-4" />
-            GRS 87 - Lolos Ambang 70
+            GRS {grs} - {grs >= threshold ? `Lolos Ambang ${threshold}` : `Belum Lolos Ambang ${threshold}`}
           </div>
 
           <h2 className="mt-6 text-[2.15rem] leading-none tracking-[-0.06em] text-[#181816]">
@@ -182,8 +187,9 @@ const PassportSubmissionView = ({ onIssue, issuing, issueError }) => (
         </div>
       </div>
     </main>
-  </>
-);
+    </>
+  )
+}
 
 const CATEGORY_COLORS = {
   BB: { tint: "#fbefd7", color: "#7a5521" },
@@ -540,23 +546,32 @@ const PassportPage = () => {
   const [issueError, setIssueError] = useState(null);
   const [passportData, setPassportData] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
+  const [grsData, setGrsData] = useState(null);
 
   const fetchPassportStatus = async () => {
     const token = localStorage.getItem("auth_token") ?? "";
     const response = await apiFetch(`${BASE_API}/green-passports/status`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const json = await response.json();
     return mapIssuedPassportData(json?.data);
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("auth_token") ?? "";
+
+    apiFetch(`${BASE_API}/evidence/summary`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) setGrsData(json.data);
+      })
+      .catch(() => {});
+
     fetchPassportStatus()
       .then((mapped) => {
-        if (mapped) {
-          setPassportData(mapped);
-        }
+        if (mapped) setPassportData(mapped);
       })
       .catch(() => {})
       .finally(() => setStatusLoading(false));
@@ -613,6 +628,7 @@ const PassportPage = () => {
           onIssue={handleIssue}
           issuing={issuing}
           issueError={issueError}
+          grsData={grsData}
         />
       )}
     </div>

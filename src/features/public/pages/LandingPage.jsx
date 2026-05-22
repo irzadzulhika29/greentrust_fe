@@ -75,12 +75,12 @@ const LandingPage = () => {
                 Setiap profil di sini punya <strong className="font-semibold text-white">Green Readiness Score</strong>{' '}
                 objektif dan hash dokumen yang tercatat on-chain. Cari mitra hijau yang nyata - bukan klaim.
               </p>
-              <div className="mt-5 flex flex-wrap items-center gap-4">
-                <PressButton variant="secondary" onClick={() => navigate('/register')}>
-                  Daftarkan Bisnis Anda
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <PressButton variant="secondary" className="!text-sm !px-4 !py-2" onClick={() => navigate('/register')}>
+                  Daftarkan Bisnis Saya
                 </PressButton>
-                <PressButton variant="ghost" onClick={() => navigate('/cara-kerja')} className="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20">
-                  Lihat Cara Kerja
+                <PressButton variant="ghost" onClick={() => navigate('/cara-kerja')} className="!text-sm !px-4 !py-2 !border-white/30 !bg-white/10 !text-white hover:!bg-white/20">
+                  Lihat Demo
                 </PressButton>
               </div>
             </div>
@@ -176,6 +176,46 @@ const LandingPage = () => {
             ))}
           </div>
         </div>
+
+        <section className="mt-24 animate-element animate-delay-500">
+          <div className="relative overflow-hidden rounded-[32px] bg-[#205336] px-8 py-10 text-white shadow-[0_24px_60px_rgba(17,17,17,0.12)] sm:px-10 lg:px-16 lg:py-14">
+            <div className="pointer-events-none absolute right-8 top-6 h-40 w-40 rounded-full border border-white/10" />
+            <div className="pointer-events-none absolute right-14 top-2 h-52 w-52 rounded-full border border-dashed border-white/12" />
+
+            <div className="relative grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="max-w-3xl">
+                <div className="mb-5 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#9ab89f]">
+                  untuk umkm
+                </div>
+                <h2 className="max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
+                  Mulai bukti hijau Anda <span className="italic text-[#8db58a]">hari ini</span>. Gratis.
+                  Selamanya.
+                </h2>
+                <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/78">
+                  Daftar &lt;60 detik. Foto KTP, isi profil bisnis, unggah nota & foto operasional. AI akan
+                  klasifikasi otomatis dan menghitung GRS Anda.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4 lg:pl-8">
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="rounded-2xl bg-[#c47b3d] px-6 py-5 text-lg font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition-colors duration-200 hover:bg-[#b57036]"
+                >
+                  Daftarkan Bisnis Saya <span aria-hidden="true">-&gt;</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/cara-kerja')}
+                  className="rounded-2xl border border-white/18 bg-transparent px-6 py-5 text-lg font-semibold text-white transition-colors duration-200 hover:bg-white/6"
+                >
+                  Lihat Demo
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )

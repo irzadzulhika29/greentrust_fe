@@ -1,11 +1,6 @@
 import {
   ArrowRight,
-  Check,
-  Eye,
-  Hash,
-  MessageSquare,
   Send,
-  TrendingUp,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -15,14 +10,6 @@ import PressButton from '@/components/ui/PressButton'
 const ICON_BG = '#f0ece4'
 const ICON_COLOR = '#5f5a53'
 const BAR_COLOR = '#5f5a53'
-
-const activities = [
-  { icon: Check, title: 'AI klasifikasi 2 dokumen baru', meta: 'Bahan Baku - Energi - 12 menit lalu', tone: '#4f8b5e' },
-  { icon: Hash, title: '2 hash terdaftar on-chain', meta: 'tx 0x9a12...ee04 - 2 jam lalu', tone: '#4f8b5e' },
-  { icon: TrendingUp, title: 'GRS naik 87 -> 90 (estimasi)', meta: 'jika 1 dok Limbah selesai - besok', tone: '#c6763b' },
-  { icon: Eye, title: 'Profil dilihat 14x hari ini', meta: 'dari Pulau Jawa', tone: '#7a5521' },
-  { icon: MessageSquare, title: 'Pesan WA baru dari pengunjung', meta: 'Pak Joko, PT Cintya - 4 jam lalu', tone: '#2f9f67' },
-]
 
 const StatCard = ({ label, value, footer }) => (
   <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
@@ -53,6 +40,8 @@ const UmkmDashboardPage = () => {
 
   const grsScore = summary?.grs_score ?? 0
   const passportStatus = summary?.passport_status ?? 'draft'
+  const onChainCount = summary?.on_chain_documents?.count ?? 0
+  const onChainTotal = summary?.on_chain_documents?.total ?? 0
   const categories = (summary?.categories ?? []).map((cat) => ({
     ...cat,
     current: cat.fulfilled_count,
@@ -125,11 +114,11 @@ const UmkmDashboardPage = () => {
             </div>
           </section>
 
-          <StatCard label="Dokumen On-Chain" value="18" footer="dari 20 total" />
+          <StatCard label="Dokumen On-Chain" value={loading ? '—' : onChainCount} footer={loading ? '' : `dari ${onChainTotal} total`} />
           <StatCard label="Pengunjung 7 Hari" value="128" footer="+22% vs minggu lalu" />
         </div>
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)]">
+        <div className="mt-6 ">
           <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -178,28 +167,6 @@ const UmkmDashboardPage = () => {
                       {category.current}/{category.total}
                     </div>
                   </article>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="rounded-[18px] border border-[#ddd6ca] bg-white p-6 shadow-[0_16px_34px_rgba(21,24,18,0.04)]">
-            <div className="text-[0.72rem] font-semibold uppercase tracking-[0.34em] text-[#8d877f]">
-              Aktivitas Terkini
-            </div>
-            <div className="mt-5 divide-y divide-[#e5e0d8]">
-              {activities.map((activity) => {
-                const Icon = activity.icon
-                return (
-                  <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0" key={activity.title}>
-                    <div className="grid h-9 w-9 flex-none place-items-center rounded-lg border border-[#ddd6ca] bg-[#fbfaf7]">
-                      <Icon className="h-4 w-4" style={{ color: activity.tone }} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-[0.92rem] font-bold text-[#20201c]">{activity.title}</div>
-                      <div className="truncate text-[0.78rem] font-semibold text-[#8d877f]">{activity.meta}</div>
-                    </div>
-                  </div>
                 )
               })}
             </div>
