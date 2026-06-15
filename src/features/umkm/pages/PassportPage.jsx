@@ -347,7 +347,7 @@ const PassportIssuedView = ({ passportData }) => {
                         />
                       </svg>
                       <div className="relative text-center">
-                        <div className="text-[2.4rem] font-semibold leading-none tracking-[-0.08em] text-[#c47739]">
+                        <div className="text-lg font-semibold leading-none tracking-[-0.08em] text-[#c47739]">
                           {grs}
                         </div>
                         <div className="mt-0.5 text-[0.65rem] font-medium uppercase tracking-[0.08em] text-[#c47739]">
